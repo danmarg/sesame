@@ -5,6 +5,8 @@ Sesame is yet another Android password keyring. Unlike many implementations, Ses
 
 Extremely alpha release: https://drive.google.com/file/d/0B5PckidoLJaecHlfMmxyVFlGV1U.
 
+WARNING: REALLY ALPHA. I think it might delete the database on upgrade or something. Don't store stuff in here if you don't have another copy. 
+
 # Why?
 
 Most Android password managers are [insecure](https://media.blackhat.com/bh-eu-12/Belenko/bh-eu-12-Belenko-Password_Encryption-Slides.pdf). 
