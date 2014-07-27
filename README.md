@@ -3,7 +3,7 @@ Sesame
 
 Sesame is yet another Android password keyring. Unlike many implementations, Sesame is both open source and moderately secure.
 
-Extremely alpha release: https://drive.google.com/file/d/0B5PckidoLJaecHlfMmxyVFlGV1U.
+Extremely alpha release: https://drive.google.com/file/d/0B5PckidoLJaeU3NHQ29tdWFFSWM.
 
 WARNING: REALLY ALPHA. I think it might delete the database on upgrade or something. Don't store stuff in here if you don't have another copy. 
 
