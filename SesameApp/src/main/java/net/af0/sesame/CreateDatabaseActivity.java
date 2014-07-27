@@ -22,7 +22,7 @@ public final class CreateDatabaseActivity extends Activity {
     // Async task for database creation
     private DatabaseCreationTask creationTask_ = null;
     // Password value
-    private String password_;
+    private char[] password_;
     // UI references
     private EditText passwordView_;
     private EditText password2View_;
@@ -63,24 +63,40 @@ public final class CreateDatabaseActivity extends Activity {
         passwordView_.setError(null);
         password2View_.setError(null);
 
-        password_ = passwordView_.getText().toString();
+        password_ = new char[passwordView_.length()];
+        passwordView_.getText().getChars(0, password_.length, password_, 0);
+        char[] password2 = new char[password2View_.length()];
+        passwordView_.getText().getChars(0, password2.length, password2, 0);
 
         boolean cancel = false;
         View focusView = null;
 
         // Check that password is filled in and matches the retyped password.
-        if (TextUtils.isEmpty(password_)) {
+        if (password_.length == 0) {
             passwordView_.setError(getString(R.string.error_field_required));
             focusView = passwordView_;
             cancel = true;
-        } else if (password_.length() < 4) {
+        } else if (password_.length < 4) {
             passwordView_.setError(getString(R.string.error_invalid_password));
             focusView = passwordView_;
             cancel = true;
-        } else if (!password_.contentEquals(password2View_.getText().toString())) {
-            password2View_.setError(getString(R.string.error_password2_mismatch));
-            focusView = password2View_;
-            cancel = true;
+        } else {
+            boolean neq = false;
+            if (password_.length != password2.length) {
+                neq = true;
+            } else {
+                for (int i = 0; i < password_.length; i++) {
+                    if (password_[i] != password2[i]) {
+                        neq = true;
+                        break;
+                    }
+                }
+            }
+            if (neq) {
+                password2View_.setError(getString(R.string.error_password2_mismatch));
+                focusView = password2View_;
+                cancel = true;
+            }
         }
 
         if (cancel) {

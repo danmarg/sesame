@@ -86,8 +86,9 @@ class Common {
         alert.setPositiveButton(R.string.action_unlock, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int whichButton) {
                 try {
-                    SQLCipherDatabase.ImportDatabase(dst.getAbsolutePath(),
-                            passwordText.getText().toString());
+                    char[] password = new char[passwordText.length()];
+                    passwordText.getText().getChars(0, password.length, password, 0);
+                    SQLCipherDatabase.ImportDatabase(dst.getAbsolutePath(), password);
                     if (importCallback != null) {
                         importCallback.run();
                     }

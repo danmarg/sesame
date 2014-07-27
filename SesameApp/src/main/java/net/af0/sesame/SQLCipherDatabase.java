@@ -88,7 +88,7 @@ public final class SQLCipherDatabase {
         return r;
     }
 
-    public static void OpenDatabase(Context ctx, String password) {
+    public static void OpenDatabase(Context ctx, char[] password) {
         if (helper_ == null) {
             SQLiteDatabase.loadLibs(ctx);
             helper_ = new SQLHelper(ctx);
@@ -96,7 +96,7 @@ public final class SQLCipherDatabase {
         database_ = helper_.getWritableDatabase(password);
     }
 
-    public static void ImportDatabase(String path, String password) {
+    public static void ImportDatabase(String path, char[] password) {
         if (isLocked()) {
             throw new SQLiteException("Database must be unlocked");
         }
@@ -111,7 +111,7 @@ public final class SQLCipherDatabase {
         crs.close();
     }
 
-    public static void CreateDatabase(Context ctx, String password) {
+    public static void CreateDatabase(Context ctx, char[] password) {
         SQLiteDatabase.loadLibs(ctx);
         if (Exists(ctx)) {
             throw new SQLiteException("file already exists");
@@ -140,6 +140,7 @@ public final class SQLCipherDatabase {
     }
 
     public static void ChangePassword(String password) {
+        // TODO: Switch this from a String to a char[] and just manually escape.
         database_.rawExecSQL("PRAGMA rekey = " + DatabaseUtils.sqlEscapeString(password) + ";");
     }
 
@@ -169,7 +170,7 @@ public final class SQLCipherDatabase {
         private long id_;
         private String username_;
         private String domain_;
-        private String password_;
+        private String password_;  // TODO: switch these all to char[]?
         private String remarks_;
 
         public long getId() {

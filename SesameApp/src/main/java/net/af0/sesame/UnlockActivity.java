@@ -22,7 +22,7 @@ public final class UnlockActivity extends Activity {
     private UnlockTask unlockTask_ = null;
 
     // Value of password at the time of the login attempt
-    private String password_;
+    private char[] password_;
 
     // UI references
     private EditText passwordView_;
@@ -102,18 +102,15 @@ public final class UnlockActivity extends Activity {
         passwordView_.setError(null);
 
         // Store values at the time of the login attempt.
-        password_ = passwordView_.getText().toString();
+        password_ = new char[passwordView_.length()];
+        passwordView_.getText().getChars(0, password_.length, password_, 0);
 
         boolean cancel = false;
         View focusView = null;
 
         // Check for a valid password.
-        if (TextUtils.isEmpty(password_)) {
+        if (password_.length == 0) {
             passwordView_.setError(getString(R.string.error_field_required));
-            focusView = passwordView_;
-            cancel = true;
-        } else if (password_.length() < 4) {
-            passwordView_.setError(getString(R.string.error_invalid_password));
             focusView = passwordView_;
             cancel = true;
         }
