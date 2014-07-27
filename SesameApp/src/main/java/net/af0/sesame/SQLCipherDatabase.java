@@ -200,7 +200,7 @@ public final class SQLCipherDatabase {
         public String toString() {
             if (getUsername() != null && getDomain() != null &&
                 !getUsername().isEmpty() && !getDomain().isEmpty()) {
-                return getUsername() + "@" + getDomain();
+                return getUsername() + " / " + getDomain();
             } else if (getUsername() != null && !getUsername().isEmpty()) {
                 return getUsername();
             } else if (getDomain() != null && !getDomain().isEmpty()) {

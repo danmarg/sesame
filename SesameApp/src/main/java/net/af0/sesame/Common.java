@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.ParcelFileDescriptor;
 import android.support.v4.content.FileProvider;
+import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
 
@@ -76,6 +77,8 @@ class Common {
 
         // Get password.
         final EditText passwordText = new EditText(ctx);
+        passwordText.setInputType(InputType.TYPE_CLASS_TEXT |
+                InputType.TYPE_TEXT_VARIATION_PASSWORD);
         AlertDialog.Builder alert = new AlertDialog.Builder(ctx);
         alert.setTitle(ctx.getString(R.string.title_enter_password));
         alert.setMessage(ctx.getString(R.string.import_database_password_message));

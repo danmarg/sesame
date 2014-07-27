@@ -44,7 +44,6 @@
         android:id="@+id/remarks"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/remarks"
         android:textSize="@dimen/front_size" />
 
 </LinearLayout>
