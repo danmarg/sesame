@@ -145,6 +145,8 @@ public final class CreateDatabaseActivity extends Activity {
             } catch (SQLiteException e) {
                 exception_ = e;
                 return false;
+            } finally{
+                for (int i = 0; i < password_.length; i++) { password_[i] = 0; }
             }
             return true;
         }
