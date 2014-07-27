@@ -118,8 +118,6 @@ public final class SQLCipherDatabase {
         OpenDatabase(ctx, password);
         database_.rawExecSQL(String.format("PRAGMA cipher_default_kdf_iter = %d",
                 Constants.KDF_ITERATIONS));
-        // Change password to force use of the new KDF iter setting. Not sure this is necessary...
-        ChangePassword(password);
     }
 
     public static void DeleteDatabase(Context ctx) {
