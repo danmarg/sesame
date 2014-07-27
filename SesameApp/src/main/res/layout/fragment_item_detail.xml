@@ -1,0 +1,50 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/add_item"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".AddItemFragment">
+
+    <TextView
+        android:id="@+id/username"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/username"
+        android:textSize="@dimen/front_size" />
+
+    <TextView
+        android:id="@+id/domain"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/domain"
+        android:textSize="@dimen/front_size" />
+
+    <TextView
+        android:id="@+id/password"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/password"
+        android:inputType="textPassword"
+        android:textSize="@dimen/front_size"
+        android:typeface="monospace" />
+
+    <Switch
+        android:id="@+id/show_password"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textOff="@string/hide_password"
+        android:textOn="@string/show_password" />
+
+    <TextView
+        android:id="@+id/remarks"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/remarks"
+        android:textSize="@dimen/front_size" />
+
+</LinearLayout>

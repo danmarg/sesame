@@ -1,0 +1,29 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <CheckBoxPreference
+        android:defaultValue="true"
+        android:key="backup_database"
+        android:summary="@string/pref_summary_backup_database"
+        android:title="@string/pref_title_backup_database" />
+
+    <net.af0.sesame.DeleteDatabasePreference
+        android:dialogIcon="@android:drawable/ic_dialog_alert"
+        android:dialogMessage="@string/pref_message_delete_database"
+        android:key="delete_database"
+        android:negativeButtonText="@string/pref_delete_database_no"
+        android:positiveButtonText="@string/pref_delete_database_yes"
+        android:summary="@string/pref_summary_delete_database"
+        android:title="@string/pref_title_delete_database" />
+
+    <Preference
+        android:key="change_password"
+        android:summary="@string/pref_summary_change_password"
+        android:title="@string/pref_title_change_password">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetClass="net.af0.sesame.ChangePasswordActivity"
+            android:targetPackage="net.af0.sesame" />
+    </Preference>
+
+
+</PreferenceScreen>
