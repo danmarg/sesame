@@ -52,8 +52,9 @@ public final class ItemListActivity extends FragmentActivity
         if (SQLCipherDatabase.isLocked()) {
             startActivity(new Intent(getBaseContext(), UnlockActivity.class).setFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        } else {
+            refreshListFromDatabase();
         }
-        refreshListFromDatabase();
         super.onResume();
     }
 

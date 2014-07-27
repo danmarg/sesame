@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteException;
 
 import net.sqlcipher.Cursor;
 import net.sqlcipher.database.SQLiteDatabase;
+import net.sqlcipher.database.SQLiteDatabaseHook;
 import net.sqlcipher.database.SQLiteOpenHelper;
 
 import java.io.File;
@@ -115,9 +116,23 @@ public final class SQLCipherDatabase {
         if (Exists(ctx)) {
             throw new SQLiteException("file already exists");
         }
-        OpenDatabase(ctx, password);
-        database_.rawExecSQL(String.format("PRAGMA cipher_default_kdf_iter = %d",
-                Constants.KDF_ITERATIONS));
+        // Open the database using openOrCreateDatabase, so we can set the KDF iter before keying.
+        database_ = SQLiteDatabase.openOrCreateDatabase(getDatabaseFilePath(ctx).getPath(),
+                password, null, new SQLiteDatabaseHook() {
+                    @Override
+                    public void preKey(SQLiteDatabase database) {
+                        database.rawExecSQL(String.format("PRAGMA kdf_iter = %d",
+                                Constants.KDF_ITERATIONS));
+                    }
+                    @Override
+                    public void postKey(SQLiteDatabase database) {
+                        database.execSQL(SQLHelper.DATABASE_CREATE);
+                    }
+                });
+        // Reopen so we can use the SQLHelper to manage the database. This is a little hackish.
+        database_.close();
+        helper_ =  new SQLHelper(ctx);
+        database_ = helper_.getWritableDatabase(password);
     }
 
     public static void DeleteDatabase(Context ctx) {
@@ -133,6 +148,9 @@ public final class SQLCipherDatabase {
     }
 
     public static void Lock() {
+        if (database_ != null) {
+            database_.close();
+        }
         if (helper_ != null) {
             helper_.close();
         }
@@ -232,7 +250,7 @@ public final class SQLCipherDatabase {
         public static final String COLUMN_REMARKS = "remarks";
         public static final int DATABASE_VERSION = 3;
         public static final String DATABASE_NAME = "keys.db";
-        private static final String DATABASE_CREATE = "create table " +
+        static final String DATABASE_CREATE = "create table " +
                 TABLE_KEYS + "(" +
                 COLUMN_ID + " integer primary key autoincrement, " +
                 COLUMN_USERNAME + " text, " +
@@ -245,9 +263,7 @@ public final class SQLCipherDatabase {
         }
 
         @Override
-        public void onCreate(SQLiteDatabase database) {
-            database.execSQL(DATABASE_CREATE);
-        }
+        public void onCreate(SQLiteDatabase database) {}
 
         @Override
         public void onUpgrade(SQLiteDatabase database, int vOld, int vNew) {
