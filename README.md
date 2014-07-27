@@ -3,6 +3,8 @@ Sesame
 
 Sesame is yet another Android password keyring. Unlike many implementations, Sesame is both open source and moderately secure.
 
+Extremely alpha release: https://drive.google.com/file/d/0B5PckidoLJaecHlfMmxyVFlGV1U.
+
 # Why?
 
 Most Android password managers are [insecure](https://media.blackhat.com/bh-eu-12/Belenko/bh-eu-12-Belenko-Password_Encryption-Slides.pdf). 
