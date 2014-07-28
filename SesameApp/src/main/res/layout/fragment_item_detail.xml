@@ -14,21 +14,18 @@
         android:id="@+id/username"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/username"
         android:textSize="@dimen/front_size" />
 
     <TextView
         android:id="@+id/domain"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/domain"
         android:textSize="@dimen/front_size" />
 
     <TextView
         android:id="@+id/password"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/password"
         android:inputType="textPassword"
         android:textSize="@dimen/front_size"
         android:typeface="monospace" />
