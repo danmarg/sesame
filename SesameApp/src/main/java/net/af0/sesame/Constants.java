@@ -9,14 +9,14 @@ class Constants {
     static final String ARG_ITEM_ID = "item_id";
     static final String ARG_TWO_PANE = "two_pane";
     static final String[] PASSWORD_CHARS = {
-        "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*()-_+=;:'\"[{]}\\|,<.>/?",
-        "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*-_+,.?",
-        "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789",
+            "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*()-_+=;:'\"[{]}\\|,<.>/?",
+            "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*-_+,.?",
+            "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789",
     };
     static final int MIN_RANDOM_PASSWORD_LENGTH = 8;
-    static final int MAX_RANDOM_PASSWORD_LENGTH = 12;
+    static final int MAX_RANDOM_PASSWORD_LENGTH = 14;
     static final String PREFS_BACKUP = "backup_database";
     static final String PREFS_CHANGE_PASSWORD = "change_password";
     static final int IMPORT_DATABASE_RESULT = 13;
-    static final int KDF_ITERATIONS = 100000;
+    static final int KDF_ITERATIONS = 256000;
 }

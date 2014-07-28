@@ -5,7 +5,6 @@ import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -142,9 +141,10 @@ public final class UnlockActivity extends Activity {
             } catch (SQLiteException e) {
                 exception_ = e;
                 return false;
-            }
-            finally {
-                for (int i = 0; i < password_.length; i++) { password_[i] = 0; }
+            } finally {
+                for (int i = 0; i < password_.length; i++) {
+                    password_[i] = 0;
+                }
             }
             return true;
         }

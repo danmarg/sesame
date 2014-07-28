@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.ParcelFileDescriptor;
 import android.support.v4.content.FileProvider;
 import android.text.InputType;
 import android.util.Log;
@@ -17,13 +16,10 @@ import com.google.common.io.Files;
 import net.sqlcipher.database.SQLiteException;
 
 import java.io.File;
-import java.io.FileDescriptor;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -56,19 +52,18 @@ class Common {
 
     static void onImportKeysResult(final Context ctx, Intent data, final Runnable importCallback) {
         final Uri uri = data.getData();
-        Log.e("ASDF", uri.getPath());
         final InputStream src;
         final OutputStream os;
         final File dst;
         try {
-           src = ctx.getContentResolver().openInputStream(uri);
-           dst = File.createTempFile(Constants.KEY_IMPORT_TMPNAME, "", ctx.getCacheDir());
-           os = new FileOutputStream(dst, false);
-           int l;
-           byte[] buf = new byte[1024];
-           while ((l = src.read(buf)) != -1) {
-               os.write(buf, 0, l);
-           }
+            src = ctx.getContentResolver().openInputStream(uri);
+            dst = File.createTempFile(Constants.KEY_IMPORT_TMPNAME, "", ctx.getCacheDir());
+            os = new FileOutputStream(dst, false);
+            int l;
+            byte[] buf = new byte[1024];
+            while ((l = src.read(buf)) != -1) {
+                os.write(buf, 0, l);
+            }
         } catch (IOException e) {
             Log.e("IMPORT", e.toString());
             DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title), e);
@@ -114,6 +109,9 @@ class Common {
     }
 
     static void DisplayException(Context ctx, String title, Exception e) {
+        if (ctx == null) {
+            return;
+        }
         new AlertDialog.Builder(ctx)
                 .setTitle(title)
                 .setMessage(e.getLocalizedMessage())

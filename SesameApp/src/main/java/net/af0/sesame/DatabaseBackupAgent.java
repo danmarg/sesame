@@ -18,7 +18,7 @@ public class DatabaseBackupAgent extends BackupAgentHelper {
             return;  // No backup requested
         }
         FileBackupHelper file_helper = new FileBackupHelper(
-                this, SQLCipherDatabase.SQLHelper.DATABASE_NAME);
+                this, SQLCipherDatabase.getDatabaseFilePath(this).getName());
         addHelper("db_file_helper", file_helper);
         // Backup prefs, too.
         SharedPreferencesBackupHelper prefs_helper =
@@ -28,7 +28,7 @@ public class DatabaseBackupAgent extends BackupAgentHelper {
 
     @Override
     public File getFilesDir() {
-        File path = getDatabasePath(SQLCipherDatabase.SQLHelper.DATABASE_NAME);
+        File path = SQLCipherDatabase.getDatabaseFilePath(this);
         return path.getParentFile();
     }
 }

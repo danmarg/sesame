@@ -191,10 +191,13 @@ public final class ItemListActivity extends FragmentActivity
             case Constants.IMPORT_DATABASE_RESULT:
                 if (resultCode == RESULT_OK) {
                     Common.onImportKeysResult(this, data,
-                        new Runnable() {
-                            @Override
-                            public void run() { refreshListFromDatabase(); }
-                        });
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    refreshListFromDatabase();
+                                }
+                            }
+                    );
                 }
                 break;
         }
@@ -273,8 +276,8 @@ public final class ItemListActivity extends FragmentActivity
 
     // Extend ArrayAdapter in order to provide customer filtering.
     final class RecordArrayAdapter extends ArrayAdapter<SQLCipherDatabase.Record> {
-        private List<SQLCipherDatabase.Record> objects_;
         private final Filter filter_;
+        private List<SQLCipherDatabase.Record> objects_;
 
         public RecordArrayAdapter(Context context, int resource, int textViewResourceId,
                                   final List<SQLCipherDatabase.Record> objects) {
