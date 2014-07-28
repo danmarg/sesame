@@ -131,9 +131,13 @@ public final class SQLCipherDatabase {
         if (Exists(ctx)) {
             throw new SQLiteException("file already exists");
         }
+        File path = getDatabaseFilePath(ctx);
+        File parent = new File(path.getParent());
+        if (!parent.exists()) {
+            parent.mkdirs();
+        }
         database_ = SQLiteDatabase.openOrCreateDatabase(
-                getDatabaseFilePath(ctx).getPath(),
-                password, null, new DatabaseHook(true));
+                path.getPath(), password, null, new DatabaseHook(true));
     }
 
     public static void DeleteDatabase(Context ctx) {
