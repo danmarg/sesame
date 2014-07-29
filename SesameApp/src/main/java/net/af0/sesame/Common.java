@@ -102,6 +102,7 @@ class Common {
     }
 
     static void StartImportKeys(Activity ctx) {
+        // TODO: show a progress spinner here.
         Intent importIntent = new Intent();
         importIntent.setAction(Intent.ACTION_GET_CONTENT);
         importIntent.setType("*/*");

@@ -32,10 +32,26 @@ public class ItemDetailFragment extends Fragment {
     void loadFromDatabase() {
         item_ = SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID));
         if (item_ != null) {
-            ((TextView) rootView_.findViewById(R.id.username)).setText(item_.getUsername());
-            ((TextView) rootView_.findViewById(R.id.password)).setText(item_.getPassword());
-            ((TextView) rootView_.findViewById(R.id.domain)).setText(item_.getDomain());
-            ((TextView) rootView_.findViewById(R.id.remarks)).setText(item_.getRemarks());
+            if (item_.getUsername() != null && !item_.getUsername().isEmpty()) {
+                ((TextView) rootView_.findViewById(R.id.username)).setText(item_.getUsername());
+            } else {
+                rootView_.findViewById(R.id.username).setVisibility(View.INVISIBLE);
+            }
+            if (item_.getPassword() != null && !item_.getPassword().isEmpty()) {
+                ((TextView) rootView_.findViewById(R.id.password)).setText(item_.getPassword());
+            } else {
+                rootView_.findViewById(R.id.password).setVisibility(View.INVISIBLE);
+            }
+            if (item_.getDomain() != null && !item_.getDomain().isEmpty()) {
+                ((TextView) rootView_.findViewById(R.id.domain)).setText(item_.getDomain());
+            } else {
+                rootView_.findViewById(R.id.domain).setVisibility(View.INVISIBLE);
+            }
+            if (item_.getRemarks() != null && !item_.getRemarks().isEmpty()) {
+                ((TextView) rootView_.findViewById(R.id.remarks)).setText(item_.getRemarks());
+            } else {
+                rootView_.findViewById(R.id.remarks).setVisibility(View.INVISIBLE);
+            }
         }
     }
 
