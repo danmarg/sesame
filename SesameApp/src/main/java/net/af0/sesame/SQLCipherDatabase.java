@@ -35,6 +35,7 @@ public final class SQLCipherDatabase {
             COLUMN_PASSWORD, COLUMN_REMARKS};
     private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "keys.db";
+    private static net.sqlcipher.database.SQLiteOpenHelper helper_;
     private static SQLiteDatabase database_;
 
     public static Record createRecord(String username, String domain, String password,
@@ -102,12 +103,11 @@ public final class SQLCipherDatabase {
     }
 
     public static void OpenDatabase(Context ctx, char[] password) {
-        if (database_ == null) {
+        if (helper_ == null) {
             SQLiteDatabase.loadLibs(ctx);
+            helper_ = new OpenHelper(ctx);
         }
-        database_ = SQLiteDatabase.openOrCreateDatabase(
-                getDatabaseFilePath(ctx).getPath(),
-                password, null, new DatabaseHook(false));
+        database_ = helper_.getWritableDatabase(password);
     }
 
     public static void ImportDatabase(String path, char[] password) {
@@ -116,7 +116,13 @@ public final class SQLCipherDatabase {
         }
         SQLiteDatabase imported = SQLiteDatabase.openDatabase(
                 path,
-                password, null, SQLiteDatabase.OPEN_READONLY, new DatabaseHook(false));
+                password, null, SQLiteDatabase.OPEN_READONLY, new DatabaseHook());
+        if (imported.getVersion() != DATABASE_VERSION) {
+            // Because we're not using OpenHelper here, we have to handle version mismatches
+            // ourselves. For now, versioning is unsupported!
+            throw new UnsupportedOperationException("Upgrade not supported!");
+
+        }
         Cursor crs = imported.query(TABLE_KEYS, allColumns_, null, null, null, null,
                 null);
         for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
@@ -131,13 +137,7 @@ public final class SQLCipherDatabase {
         if (Exists(ctx)) {
             throw new SQLiteException("file already exists");
         }
-        File path = getDatabaseFilePath(ctx);
-        File parent = new File(path.getParent());
-        if (!parent.exists()) {
-            parent.mkdirs();
-        }
-        database_ = SQLiteDatabase.openOrCreateDatabase(
-                path.getPath(), password, null, new DatabaseHook(true));
+        OpenDatabase(ctx, password);
     }
 
     public static void DeleteDatabase(Context ctx) {
@@ -154,6 +154,9 @@ public final class SQLCipherDatabase {
     }
 
     public static void Lock() {
+        if (helper_ != null) {
+            helper_.close();
+        }
         if (database_ != null) {
             database_.close();
         }
@@ -165,6 +168,32 @@ public final class SQLCipherDatabase {
 
     public static File getDatabaseFilePath(Context ctx) {
         return ctx.getDatabasePath(DATABASE_NAME);
+    }
+
+    private static class OpenHelper extends net.sqlcipher.database.SQLiteOpenHelper {
+        public OpenHelper(Context ctx) {
+            super(ctx, DATABASE_NAME, null, DATABASE_VERSION, new DatabaseHook());
+        }
+
+        public void onCreate(SQLiteDatabase database) {
+            database.execSQL(DATABASE_CREATE);
+        }
+
+        public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
+            throw new UnsupportedOperationException("Upgrade not supported");
+        }
+    }
+
+    private static class DatabaseHook implements SQLiteDatabaseHook {
+        @Override
+        public void preKey(SQLiteDatabase database) {
+        }
+
+        @Override
+        public void postKey(SQLiteDatabase database) {
+            database.rawExecSQL(String.format("PRAGMA kdf_iter = %d",
+                    Constants.KDF_ITERATIONS));
+        }
     }
 
     // Database model.
@@ -241,27 +270,6 @@ public final class SQLCipherDatabase {
                 }
             }
             return -1;
-        }
-    }
-
-    private static class DatabaseHook implements SQLiteDatabaseHook {
-        private boolean create_;
-
-        public DatabaseHook(boolean create) {
-            create_ = create;
-        }
-
-        @Override
-        public void preKey(SQLiteDatabase database) {
-        }
-
-        @Override
-        public void postKey(SQLiteDatabase database) {
-            database.rawExecSQL(String.format("PRAGMA kdf_iter = %d",
-                    Constants.KDF_ITERATIONS));
-            if (create_) {
-                database.execSQL(DATABASE_CREATE);
-            }
         }
     }
 }

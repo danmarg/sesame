@@ -65,7 +65,7 @@ public final class CreateDatabaseActivity extends Activity {
         password_ = new char[passwordView_.length()];
         passwordView_.getText().getChars(0, password_.length, password_, 0);
         char[] password2 = new char[password2View_.length()];
-        passwordView_.getText().getChars(0, password2.length, password2, 0);
+        password2View_.getText().getChars(0, password2.length, password2, 0);
 
         boolean cancel = false;
         View focusView = null;
