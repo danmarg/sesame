@@ -1,0 +1,10 @@
+package net.af0.sesame;
+
+message Database {
+  // Database version
+  optional int32 version = 1;
+  // cipher, as specified to SQLCipher
+  optional string cipher = 2 [default = "aes-256-cbc"];
+  // KDF iterations
+  optional int32 kdf_iter = 3 [default = 256000];
+}

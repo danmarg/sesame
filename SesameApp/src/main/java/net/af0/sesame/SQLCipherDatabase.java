@@ -102,7 +102,7 @@ public final class SQLCipherDatabase {
         return r;
     }
 
-    public static void OpenDatabase(Context ctx, char[] password) {
+    public static synchronized void OpenDatabase(Context ctx, char[] password) {
         if (helper_ == null) {
             SQLiteDatabase.loadLibs(ctx);
             helper_ = new OpenHelper(ctx);
@@ -140,7 +140,7 @@ public final class SQLCipherDatabase {
         OpenDatabase(ctx, password);
     }
 
-    public static void DeleteDatabase(Context ctx) {
+    public static synchronized void DeleteDatabase(Context ctx) {
         ctx.deleteDatabase(DATABASE_NAME);
     }
 
@@ -168,6 +168,19 @@ public final class SQLCipherDatabase {
 
     public static File getDatabaseFilePath(Context ctx) {
         return ctx.getDatabasePath(DATABASE_NAME);
+    }
+
+    // Begin a transaction on the open database. Useful for preventing writes during, say, a file
+    // backup.
+    public static synchronized void BeginTransaction() {
+        if (database_ != null) {
+            database_.beginTransaction();
+        }
+    }
+    public static synchronized void EndTransaction() {
+        if (database_ != null) {
+            database_.endTransaction();
+        }
     }
 
     private static class OpenHelper extends net.sqlcipher.database.SQLiteOpenHelper {
