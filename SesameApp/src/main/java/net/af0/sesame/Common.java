@@ -25,15 +25,14 @@ import java.util.Calendar;
 
 class Common {
     static boolean ExportKeys(Context ctx) {
-        File src, dst;
+        File dst;
         try {
-            src = SQLCipherDatabase.getDatabaseFilePath(ctx);
             String exportName = String.format(Constants.KEY_EXPORT_FILE,
                     new SimpleDateFormat(Constants.KEY_EXPORT_DATE_FORMAT).format(
-                            Calendar.getInstance().getTime())
-            );
+                            Calendar.getInstance().getTime()));
             dst = new File(ctx.getCacheDir(), exportName);
-            Files.copy(src, dst);
+            FileOutputStream dstStr = new FileOutputStream(dst);
+            SQLCipherDatabase.ExportDatabase(ctx, dstStr);
         } catch (java.io.IOException e) {
             Log.e("EXPORT", e.toString());
             DisplayException(ctx, ctx.getString(R.string.export_keys_failure_title), e);
@@ -57,7 +56,8 @@ class Common {
         final File dst;
         try {
             src = ctx.getContentResolver().openInputStream(uri);
-            dst = File.createTempFile(Constants.KEY_IMPORT_TMPNAME, "", ctx.getCacheDir());
+            dst = File.createTempFile(Constants.KEY_IMPORT_TMPNAME, Constants.KEY_IMPORT_SUFFIX,
+                    ctx.getCacheDir());
             os = new FileOutputStream(dst, false);
             int l;
             byte[] buf = new byte[1024];
@@ -83,11 +83,15 @@ class Common {
                 try {
                     char[] password = new char[passwordText.length()];
                     passwordText.getText().getChars(0, password.length, password, 0);
-                    SQLCipherDatabase.ImportDatabase(dst.getAbsolutePath(), password);
+                    SQLCipherDatabase.ImportDatabase(ctx, dst.getAbsolutePath(), password);
                     if (importCallback != null) {
                         importCallback.run();
                     }
                 } catch (SQLiteException e) {
+                    Log.e("IMPORT", e.toString());
+                    DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title), e);
+                }
+                catch (IOException e) {
                     Log.e("IMPORT", e.toString());
                     DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title), e);
                 }

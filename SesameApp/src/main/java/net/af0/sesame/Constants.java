@@ -1,7 +1,8 @@
 package net.af0.sesame;
 
 class Constants {
-    public static final String KEY_IMPORT_TMPNAME = "import.keys";
+    public static final String KEY_IMPORT_TMPNAME = "import";
+    public static final String KEY_IMPORT_SUFFIX = ".keys";
     public static final String KEY_EXPORT_FILE = "Sesame Key Export (%s).keys";
     public static final String KEY_EXPORT_DATE_FORMAT = "yyyy-MM-dd";
     public static final String KEY_EXPORT_URI = "net.af0.sesame.keysexport";
@@ -18,5 +19,5 @@ class Constants {
     static final String PREFS_BACKUP = "backup_database";
     static final String PREFS_CHANGE_PASSWORD = "change_password";
     static final int IMPORT_DATABASE_RESULT = 13;
-    static final int KDF_ITERATIONS = 256000;
+    static final String DB_METADATA_PREF = "db_metadata";
 }

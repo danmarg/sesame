@@ -2,14 +2,23 @@ package net.af0.sesame;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
+import android.util.Base64;
+
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import net.sqlcipher.Cursor;
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteDatabaseHook;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -102,21 +111,60 @@ public final class SQLCipherDatabase {
         return r;
     }
 
+    private static DatabaseMetadata.Database getMetadataFromPrefs(Context ctx) {
+        DatabaseMetadata.Database metadata;
+        SharedPreferences prefs = ctx.getSharedPreferences(Constants.DB_METADATA_PREF,
+                Context.MODE_PRIVATE);
+        try {
+            metadata =
+                    DatabaseMetadata.Database.parseFrom(
+                            Base64.decode(prefs.getString(Constants.DB_METADATA_PREF, ""),
+                                    Base64.DEFAULT));
+        } catch (InvalidProtocolBufferException ex) {
+            metadata = DatabaseMetadata.Database.getDefaultInstance();
+        }
+        return metadata;
+    }
+
     public static synchronized void OpenDatabase(Context ctx, char[] password) {
         if (helper_ == null) {
             SQLiteDatabase.loadLibs(ctx);
-            helper_ = new OpenHelper(ctx);
+            helper_ = new OpenHelper(ctx, getMetadataFromPrefs(ctx));
         }
         database_ = helper_.getWritableDatabase(password);
     }
 
-    public static void ImportDatabase(String path, char[] password) {
+    // The import/export format for the database is
+    //   # bytes: DatabaseMetadata, serialized with writeDelimitedTo() (i.e. preceded by a size
+    //            varint). Parse with parseDelimitedFrom().
+    //      rest: SQLCipher DB
+    // So we have to strip the first n bytes before passing the file off to SQLCipher.
+    public static void ImportDatabase(Context ctx, String path, char[] password)
+            throws IOException {
         if (isLocked()) {
             throw new SQLiteException("Database must be unlocked");
         }
-        SQLiteDatabase imported = SQLiteDatabase.openDatabase(
-                path,
-                password, null, SQLiteDatabase.OPEN_READONLY, new DatabaseHook());
+        // Get temporary path to write database minus metadata to.
+        File tmpDb = File.createTempFile(Constants.KEY_IMPORT_TMPNAME, Constants.KEY_IMPORT_SUFFIX,
+                ctx.getCacheDir());
+        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.getDefaultInstance();
+        OutputStream tmpDbStr = new FileOutputStream(tmpDb);
+        InputStream rawInput = new FileInputStream(path);
+        try {
+            // Parse the DatabaseMetadata.
+            metadata = DatabaseMetadata.Database.parseDelimitedFrom(rawInput);
+            // Now get the remaining buffer.
+            byte[] buf = new byte[1024];
+            int b;
+            while ((b = rawInput.read(buf)) != -1) {
+                tmpDbStr.write(buf, 0, b);
+            }
+        } finally {
+            tmpDbStr.close();
+        }
+        // Now everything is hunky dory.
+        SQLiteDatabase imported = SQLiteDatabase.openDatabase(tmpDb.getPath(), password, null,
+                SQLiteDatabase.OPEN_READONLY, new DatabaseHook(metadata));
         if (imported.getVersion() != DATABASE_VERSION) {
             // Because we're not using OpenHelper here, we have to handle version mismatches
             // ourselves. For now, versioning is unsupported!
@@ -132,11 +180,34 @@ public final class SQLCipherDatabase {
         crs.close();
     }
 
+    public static void ExportDatabase(Context ctx, OutputStream output) throws IOException {
+        getMetadataFromPrefs(ctx).writeDelimitedTo(output);
+        InputStream rawInput = new FileInputStream(getDatabaseFilePath(ctx));
+        byte[] buf = new byte[1024];
+        int b;
+        BeginTransaction();
+        try {
+            while ((b = rawInput.read(buf)) != -1) {
+                output.write(buf, 0, b);
+            }
+        } finally {
+            rawInput.close();
+            EndTransaction();
+        }
+    }
+
     public static void CreateDatabase(Context ctx, char[] password) {
-        SQLiteDatabase.loadLibs(ctx);
         if (Exists(ctx)) {
             throw new SQLiteException("file already exists");
         }
+        // Store a DatabaseMetadata object with our creation defaults.
+        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder().setVersion(
+                DATABASE_VERSION).build();
+        SharedPreferences.Editor preferencesEditor = ctx.getSharedPreferences(
+                Constants.DB_METADATA_PREF, Context.MODE_PRIVATE).edit();
+        preferencesEditor.putString(Constants.DB_METADATA_PREF,
+                Base64.encodeToString(metadata.toByteArray(), Base64.DEFAULT));
+        // Open normally.
         OpenDatabase(ctx, password);
     }
 
@@ -149,7 +220,7 @@ public final class SQLCipherDatabase {
         database_.rawExecSQL("PRAGMA rekey = " + DatabaseUtils.sqlEscapeString(password) + ";");
     }
 
-    public static boolean isLocked() {
+    public static synchronized boolean isLocked() {
         return database_ == null || !database_.isOpen();
     }
 
@@ -173,19 +244,19 @@ public final class SQLCipherDatabase {
     // Begin a transaction on the open database. Useful for preventing writes during, say, a file
     // backup.
     public static synchronized void BeginTransaction() {
-        if (database_ != null) {
+        if (!isLocked()) {
             database_.beginTransaction();
         }
     }
     public static synchronized void EndTransaction() {
-        if (database_ != null) {
+        if (!isLocked()) {
             database_.endTransaction();
         }
     }
 
     private static class OpenHelper extends net.sqlcipher.database.SQLiteOpenHelper {
-        public OpenHelper(Context ctx) {
-            super(ctx, DATABASE_NAME, null, DATABASE_VERSION, new DatabaseHook());
+        public OpenHelper(Context ctx, DatabaseMetadata.Database metadata) {
+            super(ctx, DATABASE_NAME, null, DATABASE_VERSION, new DatabaseHook(metadata));
         }
 
         public void onCreate(SQLiteDatabase database) {
@@ -198,6 +269,10 @@ public final class SQLCipherDatabase {
     }
 
     private static class DatabaseHook implements SQLiteDatabaseHook {
+        DatabaseMetadata.Database metadata_;
+        public DatabaseHook(DatabaseMetadata.Database metadata) {
+            metadata_ = metadata;
+        }
         @Override
         public void preKey(SQLiteDatabase database) {
         }
@@ -205,7 +280,9 @@ public final class SQLCipherDatabase {
         @Override
         public void postKey(SQLiteDatabase database) {
             database.rawExecSQL(String.format("PRAGMA kdf_iter = %d",
-                    Constants.KDF_ITERATIONS));
+                    metadata_.getKdfIter()));
+            database.rawExecSQL(String.format("PRAGMA cipher = '%s'",
+                    metadata_.getCipher()));
         }
     }
 

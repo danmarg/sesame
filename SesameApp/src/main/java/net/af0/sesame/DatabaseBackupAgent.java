@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 
 public class DatabaseBackupAgent extends BackupAgentHelper {
-
     @Override
     public void onCreate() {
         // Backup database, if requested.
