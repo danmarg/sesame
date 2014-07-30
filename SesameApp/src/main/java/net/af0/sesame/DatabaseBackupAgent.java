@@ -31,7 +31,7 @@ public class DatabaseBackupAgent extends BackupAgentHelper {
 
     @Override
     public void onBackup(ParcelFileDescriptor oldState, BackupDataOutput data,
-                         ParcelFileDescriptor  newState) throws IOException {
+                         ParcelFileDescriptor newState) throws IOException {
         SQLCipherDatabase.BeginTransaction();
         super.onBackup(oldState, data, newState);
         SQLCipherDatabase.EndTransaction();
@@ -39,7 +39,7 @@ public class DatabaseBackupAgent extends BackupAgentHelper {
 
     @Override
     public void onRestore(BackupDataInput data, int appVersionCode, ParcelFileDescriptor newState)
-        throws IOException {
+            throws IOException {
         SQLCipherDatabase.BeginTransaction();
         super.onRestore(data, appVersionCode, newState);
         SQLCipherDatabase.EndTransaction();

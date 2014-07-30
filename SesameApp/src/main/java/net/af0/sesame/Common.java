@@ -11,8 +11,6 @@ import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
 
-import com.google.common.io.Files;
-
 import net.sqlcipher.database.SQLiteException;
 
 import java.io.File;
@@ -29,7 +27,8 @@ class Common {
         try {
             String exportName = String.format(Constants.KEY_EXPORT_FILE,
                     new SimpleDateFormat(Constants.KEY_EXPORT_DATE_FORMAT).format(
-                            Calendar.getInstance().getTime()));
+                            Calendar.getInstance().getTime())
+            );
             dst = new File(ctx.getCacheDir(), exportName);
             FileOutputStream dstStr = new FileOutputStream(dst);
             SQLCipherDatabase.ExportDatabase(ctx, dstStr);
@@ -90,8 +89,7 @@ class Common {
                 } catch (SQLiteException e) {
                     Log.e("IMPORT", e.toString());
                     DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title), e);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     Log.e("IMPORT", e.toString());
                     DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title), e);
                 }

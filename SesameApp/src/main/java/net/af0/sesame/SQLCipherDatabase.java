@@ -119,7 +119,8 @@ public final class SQLCipherDatabase {
             metadata =
                     DatabaseMetadata.Database.parseFrom(
                             Base64.decode(prefs.getString(Constants.DB_METADATA_PREF, ""),
-                                    Base64.DEFAULT));
+                                    Base64.DEFAULT)
+                    );
         } catch (InvalidProtocolBufferException ex) {
             metadata = DatabaseMetadata.Database.getDefaultInstance();
         }
@@ -248,6 +249,7 @@ public final class SQLCipherDatabase {
             database_.beginTransaction();
         }
     }
+
     public static synchronized void EndTransaction() {
         if (!isLocked()) {
             database_.endTransaction();
@@ -270,9 +272,11 @@ public final class SQLCipherDatabase {
 
     private static class DatabaseHook implements SQLiteDatabaseHook {
         DatabaseMetadata.Database metadata_;
+
         public DatabaseHook(DatabaseMetadata.Database metadata) {
             metadata_ = metadata;
         }
+
         @Override
         public void preKey(SQLiteDatabase database) {
         }
