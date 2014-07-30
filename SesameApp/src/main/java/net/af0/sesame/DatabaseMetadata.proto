@@ -6,5 +6,5 @@ message Database {
   // cipher, as specified to SQLCipher
   optional string cipher = 2 [default = "aes-256-cbc"];
   // KDF iterations
-  optional int32 kdf_iter = 3 [default = 256000];
+  optional int32 kdf_iter = 3;
 }

@@ -112,17 +112,21 @@ public final class SQLCipherDatabase {
     }
 
     private static DatabaseMetadata.Database getMetadataFromPrefs(Context ctx) {
-        DatabaseMetadata.Database metadata;
+        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder()
+                .setVersion(DATABASE_VERSION)
+                .setKdfIter(Constants.KDF_ITER)
+                .build();
         SharedPreferences prefs = ctx.getSharedPreferences(Constants.DB_METADATA_PREF,
                 Context.MODE_PRIVATE);
         try {
             metadata =
-                    DatabaseMetadata.Database.parseFrom(
-                            Base64.decode(prefs.getString(Constants.DB_METADATA_PREF, ""),
-                                    Base64.DEFAULT)
-                    );
+                    DatabaseMetadata.Database.newBuilder(metadata).mergeFrom(
+                            DatabaseMetadata.Database.parseFrom(Base64.decode(prefs.getString(
+                                            Constants.DB_METADATA_PREF, ""),
+                                    Base64.DEFAULT
+                            ))
+                    ).build();
         } catch (InvalidProtocolBufferException ex) {
-            metadata = DatabaseMetadata.Database.getDefaultInstance();
         }
         return metadata;
     }
@@ -148,7 +152,10 @@ public final class SQLCipherDatabase {
         // Get temporary path to write database minus metadata to.
         File tmpDb = File.createTempFile(Constants.KEY_IMPORT_TMPNAME, Constants.KEY_IMPORT_SUFFIX,
                 ctx.getCacheDir());
-        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.getDefaultInstance();
+        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder()
+                .setVersion(DATABASE_VERSION)
+                .setKdfIter(Constants.KDF_ITER)
+                .build();
         OutputStream tmpDbStr = new FileOutputStream(tmpDb);
         InputStream rawInput = new FileInputStream(path);
         try {
@@ -203,7 +210,7 @@ public final class SQLCipherDatabase {
         }
         // Store a DatabaseMetadata object with our creation defaults.
         DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder().setVersion(
-                DATABASE_VERSION).build();
+                DATABASE_VERSION).setKdfIter(Constants.KDF_ITER).build();
         SharedPreferences.Editor preferencesEditor = ctx.getSharedPreferences(
                 Constants.DB_METADATA_PREF, Context.MODE_PRIVATE).edit();
         preferencesEditor.putString(Constants.DB_METADATA_PREF,

@@ -19,5 +19,6 @@ class Constants {
     static final String PREFS_BACKUP = "backup_database";
     static final String PREFS_CHANGE_PASSWORD = "change_password";
     static final int IMPORT_DATABASE_RESULT = 13;
+    static final int KDF_ITER = 256000;
     static final String DB_METADATA_PREF = "db_metadata";
 }
