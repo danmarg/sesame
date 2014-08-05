@@ -13,7 +13,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import net.sqlcipher.database.SQLiteException;
 
@@ -106,6 +109,20 @@ public class EditItemFragment extends Fragment {
             domainView_.setText(existingRecord_.getDomain());
             remarksView_.setText(existingRecord_.getRemarks());
         }
+
+        // Make the show/hide switch change the password field visibility.
+        ((Switch) addItemView_.findViewById(R.id.show_password)).setOnCheckedChangeListener(
+                new
+                        CompoundButton.OnCheckedChangeListener() {
+                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                                ((TextView) addItemView_.findViewById(R.id.password)).setInputType(
+                                        isChecked ?
+                                                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD :
+                                                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD
+                                );
+                            }
+                        }
+        );
 
         Button generateButton = (Button) addItemView_.findViewById(R.id.generate_password_button);
         generateButton.setOnClickListener(new View.OnClickListener() {

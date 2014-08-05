@@ -43,6 +43,13 @@
             android:inputType="textPassword"
             android:typeface="monospace" />
 
+        <Switch
+            android:id="@+id/show_password"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textOff="@string/hide_password"
+            android:textOn="@string/show_password" />
+
         <EditText
             android:id="@+id/remarks"
             android:layout_width="fill_parent"
