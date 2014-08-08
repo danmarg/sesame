@@ -4,12 +4,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Filter;
 import android.widget.SearchView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -157,7 +161,7 @@ public final class ItemListActivity extends FragmentActivity
         Collections.sort(objects);
         itemListAdapter_ = new RecordArrayAdapter(
                 this,
-                android.R.layout.simple_list_item_activated_1,
+                android.R.layout.two_line_list_item,
                 android.R.id.text1,
                 objects);
         if (itemListFragment_ == null) {
@@ -278,10 +282,12 @@ public final class ItemListActivity extends FragmentActivity
     final class RecordArrayAdapter extends ArrayAdapter<SQLCipherDatabase.Record> {
         private final Filter filter_;
         private List<SQLCipherDatabase.Record> objects_;
+        private final LayoutInflater inflater_;
 
         public RecordArrayAdapter(Context context, int resource, int textViewResourceId,
                                   final List<SQLCipherDatabase.Record> objects) {
             super(context, resource, textViewResourceId, objects);
+            this.inflater_ = LayoutInflater.from(context);
             // Keep a clone so we can refresh after a search without rereading from the database.
             this.objects_ = new ArrayList<SQLCipherDatabase.Record>(objects);
             // Filter displayed items by case insensitive key contains.
@@ -325,6 +331,25 @@ public final class ItemListActivity extends FragmentActivity
         @Override
         public Filter getFilter() {
             return filter_;
+        }
+
+        @Override
+        public View getView(final int position, final View convertView, final ViewGroup parent) {
+            View itemView = convertView;
+            final SQLCipherDatabase.Record item = getItem(position);
+            TextView text1;
+            TextView text2;
+
+            if(null == itemView) {
+                itemView = inflater_.inflate(android.R.layout.two_line_list_item,
+                        parent, false);
+            }
+            text1 = (TextView)itemView.findViewById(android.R.id.text1);
+            text2 = (TextView)itemView.findViewById(android.R.id.text2);
+            text1.setText(item.getDomain());
+            text2.setText(item.getUsername());
+
+            return itemView;
         }
     }
 }
