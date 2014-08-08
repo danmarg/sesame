@@ -1,26 +1,16 @@
 package net.af0.sesame;
 
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ArrayAdapter;
-import android.widget.Filter;
 import android.widget.FilterQueryProvider;
 import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
-import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * An activity representing a list of Items. This activity
@@ -164,10 +154,11 @@ public final class ItemListActivity extends FragmentActivity
                 this,
                 android.R.layout.two_line_list_item,
                 SQLCipherDatabase.getAllCursor(),
-                new String[] { SQLCipherDatabase.COLUMN_DOMAIN,
-                SQLCipherDatabase.COLUMN_USERNAME },
-                new int[] {android.R.id.text1, android.R.id.text2},
-                0);
+                new String[]{SQLCipherDatabase.COLUMN_DOMAIN,
+                        SQLCipherDatabase.COLUMN_USERNAME},
+                new int[]{android.R.id.text1, android.R.id.text2},
+                0
+        );
         itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {
             @Override
             public Cursor runQuery(CharSequence constraint) {
@@ -182,7 +173,7 @@ public final class ItemListActivity extends FragmentActivity
     }
 
     private SQLCipherDatabase.Record getRecordFromPosition(int position) {
-        return (SQLCipherDatabase.Record)itemListAdapter_.getItem(position);
+        return (SQLCipherDatabase.Record) itemListAdapter_.getItem(position);
     }
 
     @Override

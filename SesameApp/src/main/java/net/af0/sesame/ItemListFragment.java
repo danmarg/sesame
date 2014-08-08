@@ -2,7 +2,6 @@ package net.af0.sesame;
 
 import android.app.Activity;
 import android.content.Intent;
-import net.sqlcipher.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.view.ContextMenu;
@@ -11,6 +10,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
+
+import net.sqlcipher.Cursor;
 
 /**
  * A list fragment representing a list of Items. This fragment
@@ -132,7 +133,7 @@ public final class ItemListFragment extends ListFragment {
 
         // Notify the active callbacks interface (the activity, if the
         // fragment is attached to one) that an item has been selected.
-        SQLCipherDatabase.Record item = SQLCipherDatabase.toRecord((Cursor)getListAdapter().getItem(position));
+        SQLCipherDatabase.Record item = SQLCipherDatabase.toRecord((Cursor) getListAdapter().getItem(position));
         callbacks_.onItemSelected(String.valueOf(item.getId()));
     }
 

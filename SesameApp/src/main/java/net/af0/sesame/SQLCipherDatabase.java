@@ -6,7 +6,6 @@ import android.content.SharedPreferences;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
 import android.util.Base64;
-import android.util.Log;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -20,17 +19,15 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Singleton class wrapping the database interactions.
  */
 public final class SQLCipherDatabase {
-    private static final String TABLE_KEYS = "keys";
-    private static final String COLUMN_ID = "id";
     static final String COLUMN_USERNAME = "username";
     static final String COLUMN_DOMAIN = "domain";
+    private static final String TABLE_KEYS = "keys";
+    private static final String COLUMN_ID = "id";
     private static final String COLUMN_PASSWORD = "password";
     private static final String COLUMN_REMARKS = "remarks";
     static final String DATABASE_CREATE = "create table " +
@@ -303,7 +300,7 @@ public final class SQLCipherDatabase {
     }
 
     // Database model.
-    public static class Record implements Comparable<Record> {
+    public static class Record {
         private long id_;
         private String username_;
         private String domain_;
@@ -361,21 +358,6 @@ public final class SQLCipherDatabase {
                 return getDomain();
             }
             return "";
-        }
-
-        @Override
-        public int compareTo(Record another) {
-            if (domain_ != null) {
-                if (domain_.compareTo(another.getDomain()) != 0) {
-                    return domain_.compareToIgnoreCase(another.getDomain());
-                }
-            }
-            if (username_ != null) {
-                if (username_.compareTo(another.getUsername()) != 0) {
-                    return username_.compareToIgnoreCase(another.getUsername());
-                }
-            }
-            return -1;
         }
     }
 }
