@@ -31,25 +31,34 @@ public class ItemDetailFragment extends Fragment {
 
     void loadFromDatabase() {
         item_ = SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID));
+        TextView usernameView_ = ((TextView) rootView_.findViewById(R.id.username));
+        TextView passwordView_ = ((TextView) rootView_.findViewById(R.id.password));
+        TextView domainView_ = ((TextView) rootView_.findViewById(R.id.domain));
+        TextView remarksView_ = ((TextView) rootView_.findViewById(R.id.remarks));
+
         if (item_.getUsername() != null && !item_.getUsername().isEmpty()) {
-            ((TextView) rootView_.findViewById(R.id.username)).setText(item_.getUsername());
+            usernameView_.setText(item_.getUsername());
+            usernameView_.setVisibility(View.VISIBLE);
         } else {
-            rootView_.findViewById(R.id.username).setVisibility(View.INVISIBLE);
+            usernameView_.setVisibility(View.INVISIBLE);
         }
         if (item_.getPassword() != null && !item_.getPassword().isEmpty()) {
-            ((TextView) rootView_.findViewById(R.id.password)).setText(item_.getPassword());
+            passwordView_.setText(item_.getPassword());
+            passwordView_.setVisibility(View.VISIBLE);
         } else {
-            rootView_.findViewById(R.id.password).setVisibility(View.INVISIBLE);
+            passwordView_.setVisibility(View.INVISIBLE);
         }
         if (item_.getDomain() != null && !item_.getDomain().isEmpty()) {
-            ((TextView) rootView_.findViewById(R.id.domain)).setText(item_.getDomain());
+            domainView_.setText(item_.getDomain());
+            domainView_.setVisibility(View.VISIBLE);
         } else {
-            rootView_.findViewById(R.id.domain).setVisibility(View.INVISIBLE);
+            domainView_.setVisibility(View.INVISIBLE);
         }
         if (item_.getRemarks() != null && !item_.getRemarks().isEmpty()) {
-            ((TextView) rootView_.findViewById(R.id.remarks)).setText(item_.getRemarks());
+            remarksView_.setText(item_.getRemarks());
+            remarksView_.setVisibility(View.VISIBLE);
         } else {
-            rootView_.findViewById(R.id.remarks).setVisibility(View.INVISIBLE);
+            remarksView_.setVisibility(View.INVISIBLE);
         }
     }
 
