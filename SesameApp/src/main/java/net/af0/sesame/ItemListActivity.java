@@ -2,6 +2,7 @@ package net.af0.sesame;
 
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.view.LayoutInflater;
@@ -12,7 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Filter;
+import android.widget.FilterQueryProvider;
 import android.widget.SearchView;
+import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -48,7 +51,7 @@ public final class ItemListActivity extends FragmentActivity
     private long selectedId_;
 
     private ItemListFragment itemListFragment_;
-    private RecordArrayAdapter itemListAdapter_;
+    private SimpleCursorAdapter itemListAdapter_;
 
     @Override
     protected void onResume() {
@@ -157,13 +160,20 @@ public final class ItemListActivity extends FragmentActivity
     }
 
     void refreshListFromDatabase() {
-        List<SQLCipherDatabase.Record> objects = SQLCipherDatabase.getAll();
-        Collections.sort(objects);
-        itemListAdapter_ = new RecordArrayAdapter(
+        itemListAdapter_ = new SimpleCursorAdapter(
                 this,
                 android.R.layout.two_line_list_item,
-                android.R.id.text1,
-                objects);
+                SQLCipherDatabase.getAllCursor(),
+                new String[] { SQLCipherDatabase.COLUMN_DOMAIN,
+                SQLCipherDatabase.COLUMN_USERNAME },
+                new int[] {android.R.id.text1, android.R.id.text2},
+                0);
+        itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {
+            @Override
+            public Cursor runQuery(CharSequence constraint) {
+                return SQLCipherDatabase.getContaining(constraint.toString());
+            }
+        });
         if (itemListFragment_ == null) {
             itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
                     .findFragmentById(R.id.item_list);
@@ -172,7 +182,7 @@ public final class ItemListActivity extends FragmentActivity
     }
 
     private SQLCipherDatabase.Record getRecordFromPosition(int position) {
-        return itemListAdapter_.getItem(position);
+        return (SQLCipherDatabase.Record)itemListAdapter_.getItem(position);
     }
 
     @Override
@@ -279,7 +289,7 @@ public final class ItemListActivity extends FragmentActivity
     }
 
     // Extend ArrayAdapter in order to provide customer filtering.
-    final class RecordArrayAdapter extends ArrayAdapter<SQLCipherDatabase.Record> {
+/*    final class RecordArrayAdapter extends ArrayAdapter<SQLCipherDatabase.Record> {
         private final Filter filter_;
         private List<SQLCipherDatabase.Record> objects_;
         private final LayoutInflater inflater_;
@@ -351,5 +361,5 @@ public final class ItemListActivity extends FragmentActivity
 
             return itemView;
         }
-    }
+    }*/
 }

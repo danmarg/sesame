@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
 import android.util.Base64;
+import android.util.Log;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -28,8 +29,8 @@ import java.util.List;
 public final class SQLCipherDatabase {
     private static final String TABLE_KEYS = "keys";
     private static final String COLUMN_ID = "id";
-    private static final String COLUMN_USERNAME = "username";
-    private static final String COLUMN_DOMAIN = "domain";
+    static final String COLUMN_USERNAME = "username";
+    static final String COLUMN_DOMAIN = "domain";
     private static final String COLUMN_PASSWORD = "password";
     private static final String COLUMN_REMARKS = "remarks";
     static final String DATABASE_CREATE = "create table " +
@@ -40,7 +41,10 @@ public final class SQLCipherDatabase {
             COLUMN_PASSWORD + " text," +
             COLUMN_REMARKS + " text);";
     private static String[] allColumns_ = {
-            COLUMN_ID, COLUMN_USERNAME, COLUMN_DOMAIN,
+            // Stupid. I named the field "id" and SimpleCursorFactory expects "id". Rather than
+            // rename and break compatibility to gracefully handle database upgrades, let's just
+            // alias it. I hope nobody is reading this...
+            COLUMN_ID + " AS _id", COLUMN_USERNAME, COLUMN_DOMAIN,
             COLUMN_PASSWORD, COLUMN_REMARKS};
     private static final int DATABASE_VERSION = 3;
     private static final String DATABASE_NAME = "keys.db";
@@ -89,18 +93,19 @@ public final class SQLCipherDatabase {
         return r;
     }
 
-    public static List<Record> getAll() {
-        Cursor crs = database_.query(TABLE_KEYS, allColumns_, null, null, null, null,
-                null);
-        List<Record> rs = new ArrayList<Record>(crs.getCount());
-        for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
-            rs.add(toRecord(crs));
-        }
-        crs.close();
-        return rs;
+    public static Cursor getAllCursor() {
+        return database_.query(TABLE_KEYS, allColumns_, null, null, null, null,
+                COLUMN_DOMAIN + ", " + COLUMN_USERNAME + " DESC");
     }
 
-    private static Record toRecord(Cursor crs) {
+    public static Cursor getContaining(String substr) {
+        String s = DatabaseUtils.sqlEscapeString("%" + substr + "%");
+        return database_.query(TABLE_KEYS, allColumns_,
+                String.format("%s LIKE %s OR %s LIKE %s", COLUMN_DOMAIN, s, COLUMN_USERNAME, s),
+                null, null, null, COLUMN_DOMAIN + ", " + COLUMN_USERNAME + " DESC");
+    }
+
+    public static Record toRecord(Cursor crs) {
         Record r = new Record();
         r.setId(crs.getLong(0));
         r.setUsername(crs.getString(1));
