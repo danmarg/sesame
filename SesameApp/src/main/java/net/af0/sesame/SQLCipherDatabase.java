@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
 import android.util.Base64;
+import android.util.Log;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -37,7 +38,7 @@ public final class SQLCipherDatabase {
             COLUMN_DOMAIN + " text," +
             COLUMN_PASSWORD + " text," +
             COLUMN_REMARKS + " text);";
-    private static String[] allColumns_ = {
+    private static final String[] allColumns_ = {
             // Stupid. I named the field "id" and SimpleCursorFactory expects "id". Rather than
             // rename and break compatibility to gracefully handle database upgrades, let's just
             // alias it. I hope nobody is reading this...
@@ -129,6 +130,8 @@ public final class SQLCipherDatabase {
                             ))
                     ).build();
         } catch (InvalidProtocolBufferException ex) {
+            Log.e("IMPORT", ex.toString());
+            // Go with defaults anyway. Uh oh...
         }
         return metadata;
     }
@@ -217,6 +220,7 @@ public final class SQLCipherDatabase {
                 Constants.DB_METADATA_PREF, Context.MODE_PRIVATE).edit();
         preferencesEditor.putString(Constants.DB_METADATA_PREF,
                 Base64.encodeToString(metadata.toByteArray(), Base64.DEFAULT));
+        preferencesEditor.commit();
         // Open normally.
         OpenDatabase(ctx, password);
     }
@@ -280,7 +284,7 @@ public final class SQLCipherDatabase {
     }
 
     private static class DatabaseHook implements SQLiteDatabaseHook {
-        DatabaseMetadata.Database metadata_;
+        final DatabaseMetadata.Database metadata_;
 
         public DatabaseHook(DatabaseMetadata.Database metadata) {
             metadata_ = metadata;

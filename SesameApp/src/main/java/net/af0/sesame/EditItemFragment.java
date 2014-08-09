@@ -2,7 +2,6 @@ package net.af0.sesame;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
-import android.graphics.Typeface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -44,7 +43,7 @@ public class EditItemFragment extends Fragment {
     private String remarks_;
 
     private View addItemView_;
-    private View addItemFormView_;
+    View addItemFormView_;
     private EditText usernameView_;
     private EditText domainView_;
     private EditText passwordView_;

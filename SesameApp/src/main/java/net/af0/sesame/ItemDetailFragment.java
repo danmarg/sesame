@@ -17,7 +17,7 @@ import android.widget.TextView;
  */
 public class ItemDetailFragment extends Fragment {
     // The item we're showing details for.
-    private SQLCipherDatabase.Record item_;
+    SQLCipherDatabase.Record item_;
 
     private View rootView_;
 

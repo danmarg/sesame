@@ -122,7 +122,7 @@ public final class ChangePasswordActivity extends Activity {
      */
     public class ChangePasswordTask extends AsyncTask<Void, Void, Boolean> {
         private SQLiteException exception;  // Stick any exceptions here
-        private Activity parent_;
+        private final Activity parent_;
 
         public ChangePasswordTask(Activity parent) {
             parent_ = parent;

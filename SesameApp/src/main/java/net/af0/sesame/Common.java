@@ -131,7 +131,6 @@ class Common {
                             if (importCallback != null) {
                                 importCallback.run();
                             }
-                            return;
                         } else {
                             Log.w("Importing database", exception.toString());
                             DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title),

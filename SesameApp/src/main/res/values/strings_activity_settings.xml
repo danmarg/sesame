@@ -2,11 +2,11 @@
     <string name="title_activity_settings">Settings</string>
 
     <string name="pref_title_backup_database">Cloud Backup</string>
-    <string name="pref_summary_backup_database">Automatically backup encrypted keyring to Android servers</string>
+    <string name="pref_summary_backup_database">Automatically backup encrypted Keyring to Android servers</string>
 
     <string name="pref_title_delete_database">Delete Keyring</string>
-    <string name="pref_summary_delete_database">Delete keyring and start over</string>
-    <string name="pref_message_delete_database">Are you sure you want to delete your keyring and start over?
+    <string name="pref_summary_delete_database">Delete Keyring and start over</string>
+    <string name="pref_message_delete_database">Are you sure you want to delete your Keyring and start over?
 
 This will remove all saved passwords, and cannot be undone.</string>
     <string name="pref_delete_database_yes">Yes, delete everything</string>
