@@ -7,7 +7,7 @@ import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
 
 /**
- * An activity that allows one to add a new item.
+ * An activity that allows one to edit an item.
  * <p/>
  * This activity is mostly just a 'shell' activity containing nothing
  * more than a {@link EditItemFragment}.
@@ -25,8 +25,8 @@ public final class EditItemActivity extends FragmentActivity {
         }
 
         if (savedInstanceState == null) {
-            // Create the add item fragment and add it to the activity
-            // using a fragment transaction.
+            // Create the edit item fragment and add it to the activity using a fragment
+            // transaction.
             Bundle arguments = new Bundle();
             arguments.putBoolean(Constants.ARG_TWO_PANE, Boolean.FALSE);
             arguments.putLong(Constants.ARG_ITEM_ID,
@@ -37,6 +37,16 @@ public final class EditItemActivity extends FragmentActivity {
                     .add(R.id.add_item_container, fragment)
                     .commit();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        // If we're locked, go to the unlock view.
+        if (SQLCipherDatabase.isLocked()) {
+            startActivity(new Intent(getBaseContext(), UnlockActivity.class).setFlags(
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP));
+        }
+        super.onResume();
     }
 
     @Override

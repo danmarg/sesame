@@ -13,20 +13,16 @@ import android.widget.SimpleCursorAdapter;
 
 
 /**
- * An activity representing a list of Items. This activity
- * has different presentations for handset and tablet-size devices. On
- * handsets, the activity presents a list of items, which when touched,
- * lead to a {@link ItemDetailActivity} representing
- * item details. On tablets, the activity presents the list of items and
- * item details side-by-side using two vertical panes.
+ * An activity representing a list of Items. This activity has different presentations for handset
+ * and tablet-size devices. On handsets, the activity presents a list of items, which when touched,
+ * lead to a {@link ItemDetailActivity} representing item details. On tablets, the activity presents
+ * the list of items and item details side-by-side using two vertical panes.
  * <p/>
- * The activity makes heavy use of fragments. The list of items is a
- * {@link ItemListFragment} and the item details
- * (if present) is a {@link ItemDetailFragment}.
+ * The activity makes heavy use of fragments. The list of items is a {@link ItemListFragment} and
+ * the item details (if present) is a {@link ItemDetailFragment}.
  * <p/>
- * This activity also implements the required
- * {@link ItemListFragment.Callbacks} interface
- * to listen for item selections.
+ * This activity also implements the required {@link ItemListFragment.Callbacks} interface to listen
+ * for item selections.
  */
 public final class ItemListActivity extends FragmentActivity
         implements ItemListFragment.Callbacks, SearchView.OnQueryTextListener {
@@ -34,8 +30,7 @@ public final class ItemListActivity extends FragmentActivity
     private static final int ADD_RECORD_REQUEST = 0;
     private static final int EDIT_RECORD_REQUEST = 1;
     /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet
-     * device.
+     * Whether or not the activity is in two-pane mode, i.e. running on a tablet device.
      */
     private boolean twoPane_;
     private long selectedId_;
@@ -68,11 +63,17 @@ public final class ItemListActivity extends FragmentActivity
         return super.onCreateOptionsMenu(menu);
     }
 
+    /**
+     * Handle search queries.
+     */
     public boolean onQueryTextSubmit(String query) {
         itemListAdapter_.getFilter().filter(query);
         return true;
     }
 
+    /**
+     * Handle search queries.
+     */
     public boolean onQueryTextChange(String query) {
         itemListAdapter_.getFilter().filter(query);
         return true;
@@ -85,14 +86,12 @@ public final class ItemListActivity extends FragmentActivity
         setContentView(R.layout.activity_item_list);
 
         if (findViewById(R.id.item_detail_container) != null) {
-            // The detail container view will be present only in the
-            // large-screen layouts (res/values-large and
-            // res/values-sw600dp). If this view is present, then the
-            // activity should be in two-pane mode.x
+            // The detail container view will be present only in the large-screen layouts
+            // (res/values-large and res/values-sw600dp). If this view is present, then the activity
+            // should be in two-pane mode.x
             twoPane_ = true;
 
-            // In two-pane mode, list items should be given the
-            // 'activated' state when touched.
+            // In two-pane mode, list items should be given the 'activated' state when touched.
             ((ItemListFragment) getSupportFragmentManager()
                     .findFragmentById(R.id.item_list))
                     .setActivateOnItemClick();
@@ -125,9 +124,8 @@ public final class ItemListActivity extends FragmentActivity
                 return true;
             case R.id.add:
                 if (twoPane_) {
-                    // In two-pane mode, show the add key view in this activity by
-                    // adding or replacing the detail fragment using a
-                    // fragment transaction.
+                    // In two-pane mode, show the add key view in this activity by adding or
+                    // replacing the detail fragment using a fragment transaction.
                     Bundle arguments = new Bundle();
                     arguments.putBoolean(Constants.ARG_TWO_PANE, Boolean.TRUE);
                     EditItemFragment fragment = new EditItemFragment();
@@ -137,8 +135,8 @@ public final class ItemListActivity extends FragmentActivity
                             .commit();
 
                 } else {
-                    // In single-pane mode, simply start the add key activity
-                    // for the selected item ID.
+                    // In single-pane mode, simply start the add key activity for the selected item
+                    // ID.
                     Intent addIntent = new Intent(this, EditItemActivity.class);
                     addIntent.putExtra(Constants.ARG_TWO_PANE, Boolean.FALSE);
                     startActivityForResult(addIntent, ADD_RECORD_REQUEST);
@@ -147,33 +145,6 @@ public final class ItemListActivity extends FragmentActivity
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    void refreshListFromDatabase() {
-        itemListAdapter_ = new SimpleCursorAdapter(
-                this,
-                android.R.layout.two_line_list_item,
-                SQLCipherDatabase.getAllCursor(),
-                new String[]{SQLCipherDatabase.COLUMN_DOMAIN,
-                        SQLCipherDatabase.COLUMN_USERNAME},
-                new int[]{android.R.id.text1, android.R.id.text2},
-                0
-        );
-        itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {
-            @Override
-            public Cursor runQuery(CharSequence constraint) {
-                return SQLCipherDatabase.getContaining(constraint.toString());
-            }
-        });
-        if (itemListFragment_ == null) {
-            itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
-                    .findFragmentById(R.id.item_list);
-        }
-        itemListFragment_.setListAdapter(itemListAdapter_);
-    }
-
-    private SQLCipherDatabase.Record getRecordFromPosition(int position) {
-        return (SQLCipherDatabase.Record) itemListAdapter_.getItem(position);
     }
 
     @Override
@@ -208,7 +179,9 @@ public final class ItemListActivity extends FragmentActivity
         }
     }
 
-    // Called from the child ItemListFragment on the Edit context menu.
+    /**
+    /* Called from the child ItemListFragment on the Edit context menu.
+     */
     public void onEditItem(int position) {
         long id = getRecordFromPosition(position).getId();
         if (twoPane_) {
@@ -222,15 +195,16 @@ public final class ItemListActivity extends FragmentActivity
                     .commit();
 
         } else {
-            // In single-pane mode, simply start the detail activity
-            // for the selected item ID.
+            // In single-pane mode, simply start the detail activity for the selected item ID.
             Intent editIntent = new Intent(this, EditItemActivity.class);
             editIntent.putExtra(Constants.ARG_ITEM_ID, id);
             startActivityForResult(editIntent, EDIT_RECORD_REQUEST);
         }
     }
 
-    // Called from the child ItemListFragment on the Edit context menu.
+    /**
+     * Called from the child ItemListFragment on the Edit context menu.
+     */
     public void onDeleteItem(int position) {
         long id = getRecordFromPosition(position).getId();
         Bundle arguments = new Bundle();
@@ -279,78 +253,36 @@ public final class ItemListActivity extends FragmentActivity
         }
     }
 
-    // Extend ArrayAdapter in order to provide customer filtering.
-/*    final class RecordArrayAdapter extends ArrayAdapter<SQLCipherDatabase.Record> {
-        private final Filter filter_;
-        private List<SQLCipherDatabase.Record> objects_;
-        private final LayoutInflater inflater_;
-
-        public RecordArrayAdapter(Context context, int resource, int textViewResourceId,
-                                  final List<SQLCipherDatabase.Record> objects) {
-            super(context, resource, textViewResourceId, objects);
-            this.inflater_ = LayoutInflater.from(context);
-            // Keep a clone so we can refresh after a search without rereading from the database.
-            this.objects_ = new ArrayList<SQLCipherDatabase.Record>(objects);
-            // Filter displayed items by case insensitive key contains.
-            this.filter_ = new Filter() {
-                @Override
-                protected FilterResults performFiltering(CharSequence constraint) {
-                    FilterResults res = new FilterResults();
-                    if (constraint == null || constraint.length() == 0) {
-                        res.values = new ArrayList<SQLCipherDatabase.Record>(objects_);
-                        res.count = objects_.size();
-                        return res;
-                    }
-                    ArrayList<SQLCipherDatabase.Record> t = new
-                            ArrayList<SQLCipherDatabase.Record>();
-                    String c = constraint.toString().toLowerCase();
-                    for (SQLCipherDatabase.Record r : objects_) {
-                        if (r.getRemarks().toLowerCase().contains(c) ||
-                                r.getDomain().toLowerCase().contains(c) ||
-                                r.getUsername().toLowerCase().contains(c)) {
-                            t.add(r);
-                        }
-                    }
-                    res.values = t;
-                    res.count = t.size();
-                    return res;
-                }
-
-                @Override
-                protected void publishResults(CharSequence constraint, FilterResults results) {
-                    clear();
-                    addAll((ArrayList<SQLCipherDatabase.Record>) results.values);
-                    if (results.count > 0) {
-                        notifyDataSetChanged();
-                    } else {
-                        notifyDataSetInvalidated();
-                    }
-                }
-            };
-        }
-
-        @Override
-        public Filter getFilter() {
-            return filter_;
-        }
-
-        @Override
-        public View getView(final int position, final View convertView, final ViewGroup parent) {
-            View itemView = convertView;
-            final SQLCipherDatabase.Record item = getItem(position);
-            TextView text1;
-            TextView text2;
-
-            if(null == itemView) {
-                itemView = inflater_.inflate(android.R.layout.two_line_list_item,
-                        parent, false);
+    /**
+     * Refresh the displayed list adapter from the open database.
+     */
+    void refreshListFromDatabase() {
+        itemListAdapter_ = new SimpleCursorAdapter(
+                this,
+                android.R.layout.two_line_list_item,
+                SQLCipherDatabase.getAllCursor(),
+                new String[]{SQLCipherDatabase.COLUMN_DOMAIN,
+                        SQLCipherDatabase.COLUMN_USERNAME},
+                new int[]{android.R.id.text1, android.R.id.text2},
+                0
+        );
+        itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {
+            @Override
+            public Cursor runQuery(CharSequence constraint) {
+                return SQLCipherDatabase.getContaining(constraint.toString());
             }
-            text1 = (TextView)itemView.findViewById(android.R.id.text1);
-            text2 = (TextView)itemView.findViewById(android.R.id.text2);
-            text1.setText(item.getDomain());
-            text2.setText(item.getUsername());
-
-            return itemView;
+        });
+        if (itemListFragment_ == null) {
+            itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
+                    .findFragmentById(R.id.item_list);
         }
-    }*/
+        itemListFragment_.setListAdapter(itemListAdapter_);
+    }
+
+    /**
+     * Get the record object for the specified offset in the list.
+     */
+    private SQLCipherDatabase.Record getRecordFromPosition(int position) {
+        return (SQLCipherDatabase.Record) itemListAdapter_.getItem(position);
+    }
 }

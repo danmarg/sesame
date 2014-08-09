@@ -16,7 +16,11 @@ import android.widget.TextView;
 
 import net.sqlcipher.database.SQLiteException;
 
+/**
+ * Create a new database.
+ */
 public final class CreateDatabaseActivity extends Activity {
+    // Progress spinner for background task of creating database
     private ProgressDialog progress_;
     // Async task for database creation
     private DatabaseCreationTask creationTask_ = null;
@@ -53,6 +57,9 @@ public final class CreateDatabaseActivity extends Activity {
         });
     }
 
+    /**
+     * Handle actual database creation. Validate passwords, and start a background task.
+     */
     private void createDatabase() {
         if (creationTask_ != null) {
             return;
@@ -72,10 +79,12 @@ public final class CreateDatabaseActivity extends Activity {
 
         // Check that password is filled in and matches the retyped password.
         if (password_.length == 0) {
+            // Empty
             passwordView_.setError(getString(R.string.error_field_required));
             focusView = passwordView_;
             cancel = true;
-        } else if (password_.length < 4) {
+        } else if (password_.length < Constants.MIN_PASSWORD_LENGTH) {
+            // Too short
             passwordView_.setError(getString(R.string.error_invalid_password));
             focusView = passwordView_;
             cancel = true;
@@ -84,6 +93,7 @@ public final class CreateDatabaseActivity extends Activity {
             if (password_.length != password2.length) {
                 neq = true;
             } else {
+                // Mismatch
                 for (int i = 0; i < password_.length; i++) {
                     if (password_[i] != password2[i]) {
                         neq = true;
@@ -112,19 +122,15 @@ public final class CreateDatabaseActivity extends Activity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-
-        // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.create_database, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
             case R.id.action_settings:
+                // Launch the settings activity for this menu item.
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
         }
@@ -135,14 +141,14 @@ public final class CreateDatabaseActivity extends Activity {
      * An async database creation task.
      */
     public class DatabaseCreationTask extends AsyncTask<Void, Void, Boolean> {
-        private SQLiteException exception_;
+        private SQLiteException exception;
 
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
                 SQLCipherDatabase.CreateDatabase(getBaseContext(), password_);
             } catch (SQLiteException e) {
-                exception_ = e;
+                exception = e;
                 return false;
             } finally {
                 for (int i = 0; i < password_.length; i++) {
@@ -160,10 +166,8 @@ public final class CreateDatabaseActivity extends Activity {
                 finish();
                 startActivity(new Intent(getBaseContext(), ItemListActivity.class));
             } else {
-                Log.e("CREATE", exception_.toString());
-                Common.DisplayException(getParent(),
-                        getString(R.string.error_creating_database),
-                        exception_);
+                Log.e("CREATE", exception.toString());
+                Common.DisplayException(getParent(), getString(R.string.error_creating_database), exception);
             }
         }
 

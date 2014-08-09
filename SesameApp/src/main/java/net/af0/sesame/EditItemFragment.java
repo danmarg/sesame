@@ -23,13 +23,12 @@ import net.sqlcipher.database.SQLiteException;
 import java.security.SecureRandom;
 
 /**
- * A fragment representing a single Item detail screen.
- * This fragment is either contained in a {@link net.af0.sesame.ItemListActivity}
- * in two-pane mode (on tablets) or a {@link net.af0.sesame.ItemDetailActivity}
- * on handsets.
+ * A fragment representing a single editable item screen.
+ * This fragment is either contained in a {@link net.af0.sesame.ItemListActivity} in two-pane mode
+ * (on tablets) or a {@link net.af0.sesame.EditItemActivity} on handsets.
  */
 public class EditItemFragment extends Fragment {
-
+    // Progress spinner for saving changes
     private ProgressDialog progress_;
     // Async task for adding an item
     private AddTask addTask_ = null;
@@ -50,34 +49,18 @@ public class EditItemFragment extends Fragment {
     private EditText domainView_;
     private EditText passwordView_;
     private EditText remarksView_;
+    private Switch passwordSwitch_;
 
+    // Used for password generation
     private SecureRandom rand_;
-
+    // Offset into {@link net.af0.sesame.Constants.PASSWORD_CHARS} for which chars to use next.
     private int generateCount_ = 0;
 
     /**
-     * Mandatory empty constructor for the fragment manager to instantiate the
-     * fragment (e.g. upon screen orientation changes).
+     * Mandatory empty constructor for the fragment manager to instantiate the fragment (e.g. upon
+     * screen orientation changes).
      */
-    public EditItemFragment() {
-    }
-
-    private void generatePassword() {
-        if (rand_ == null) {
-            rand_ = new SecureRandom();
-        }
-
-        StringBuilder s = new StringBuilder();
-        int l = Constants.MIN_RANDOM_PASSWORD_LENGTH +
-                rand_.nextInt(Constants.MAX_RANDOM_PASSWORD_LENGTH - Constants.MIN_RANDOM_PASSWORD_LENGTH + 1);
-        String pwdChars = Constants.PASSWORD_CHARS[generateCount_++ % Constants.PASSWORD_CHARS.length];
-        for (int i = 0; i < l; i++) {
-            s.append(pwdChars.charAt(rand_.nextInt(pwdChars.length())));
-        }
-        passwordView_.setInputType(InputType.TYPE_CLASS_TEXT);
-        passwordView_.setTypeface(Typeface.MONOSPACE);
-        passwordView_.setText(s);
-    }
+    public EditItemFragment() { }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -102,6 +85,7 @@ public class EditItemFragment extends Fragment {
         domainView_ = (EditText) addItemFormView_.findViewById(R.id.domain);
         passwordView_ = (EditText) addItemFormView_.findViewById(R.id.password);
         remarksView_ = (EditText) addItemFormView_.findViewById(R.id.remarks);
+        passwordSwitch_ = ((Switch) addItemView_.findViewById(R.id.show_password));
 
         if (existingRecord_ != null) {
             usernameView_.setText(existingRecord_.getUsername());
@@ -111,14 +95,15 @@ public class EditItemFragment extends Fragment {
         }
 
         // Make the show/hide switch change the password field visibility.
-        ((Switch) addItemView_.findViewById(R.id.show_password)).setOnCheckedChangeListener(
-                new
-                        CompoundButton.OnCheckedChangeListener() {
-                            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+        passwordSwitch_.setOnCheckedChangeListener(
+                new CompoundButton.OnCheckedChangeListener() {
+                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                                 ((TextView) addItemView_.findViewById(R.id.password)).setInputType(
                                         isChecked ?
-                                                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD :
-                                                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD
+                                                InputType.TYPE_CLASS_TEXT |
+                                                        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD :
+                                                InputType.TYPE_CLASS_TEXT |
+                                                        InputType.TYPE_TEXT_VARIATION_PASSWORD
                                 );
                             }
                         }
@@ -176,10 +161,34 @@ public class EditItemFragment extends Fragment {
     }
 
     /**
+     * Generate a random password. This function successively iterates through
+     * @{link net.af0.sesame.Constants.PASSWORD_CHARS} in order to generate passwords with different
+     * character sets. Passwords are random-length, random-value from the current set.
+     */
+    private void generatePassword() {
+        if (rand_ == null) {
+            rand_ = new SecureRandom();
+        }
+
+        StringBuilder s = new StringBuilder();
+        int l = Constants.MIN_RANDOM_PASSWORD_LENGTH +
+                rand_.nextInt(Constants.MAX_RANDOM_PASSWORD_LENGTH -
+                        Constants.MIN_RANDOM_PASSWORD_LENGTH + 1);
+        String pwdChars = Constants.PASSWORD_CHARS[generateCount_++ %
+                Constants.PASSWORD_CHARS.length];
+        for (int i = 0; i < l; i++) {
+            s.append(pwdChars.charAt(rand_.nextInt(pwdChars.length())));
+        }
+        // Always show new passwords.
+        passwordSwitch_.setChecked(true);
+        passwordView_.setText(s);
+    }
+
+    /**
      * Represents an asynchronous database add.
      */
     public class AddTask extends AsyncTask<Void, Void, Boolean> {
-        private SQLiteException exception_;
+        private SQLiteException exception;
         private long newRecordId_;
 
         @Override
@@ -198,7 +207,7 @@ public class EditItemFragment extends Fragment {
                 }
             } catch (SQLiteException e) {
                 Log.w("EDITING", e.toString());
-                exception_ = e;
+                exception = e;
                 if (!twoPane_) {
                     getActivity().setResult(Activity.RESULT_CANCELED);
                 }
@@ -223,10 +232,10 @@ public class EditItemFragment extends Fragment {
                     }
                 }
             } else {
-                Log.e("EDIT", exception_.toString());
+                Log.e("EDIT", exception.toString());
                 Common.DisplayException(getActivity(),
                         getString(R.string.error_saving_item_title),
-                        exception_);
+                        exception);
                 if (!twoPane_) {
                     getActivity().setResult(Activity.RESULT_CANCELED);
                 }

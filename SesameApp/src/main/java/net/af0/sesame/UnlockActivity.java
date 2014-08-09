@@ -16,6 +16,10 @@ import android.widget.TextView;
 
 import net.sqlcipher.database.SQLiteException;
 
+/**
+ * This is the first activity the user sees when opening the app. It allows unlocking the database
+ * (or forwards the user to the CreateDatabaseActivity if none exists).
+ */
 public final class UnlockActivity extends Activity {
     // Async task for database unlocking
     private UnlockTask unlockTask_ = null;
@@ -78,9 +82,6 @@ public final class UnlockActivity extends Activity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         switch (item.getItemId()) {
             case R.id.action_settings:
                 startActivity(new Intent(this, SettingsActivity.class).setFlags(
@@ -115,8 +116,7 @@ public final class UnlockActivity extends Activity {
         }
 
         if (cancel) {
-            // There was an error; don't attempt login and focus the first
-            // form field with an error.
+            // There was an error; don't attempt login and focus the first form field with an error.
             focusView.requestFocus();
         } else {
             // Show a progress spinner and begin unlocking in the background.
@@ -132,14 +132,14 @@ public final class UnlockActivity extends Activity {
      * Represents an asynchronous database unlock.
      */
     public class UnlockTask extends AsyncTask<Void, Void, Boolean> {
-        private SQLiteException exception_;
+        private SQLiteException exception;
 
         @Override
         protected Boolean doInBackground(Void... params) {
             try {
                 SQLCipherDatabase.OpenDatabase(getBaseContext(), password_);
             } catch (SQLiteException e) {
-                exception_ = e;
+                exception = e;
                 return false;
             } finally {
                 for (int i = 0; i < password_.length; i++) {
@@ -158,7 +158,7 @@ public final class UnlockActivity extends Activity {
                 // Don't finish() here--we want the "lock" button to take us back here in the stack.
                 startActivity(new Intent(getBaseContext(), ItemListActivity.class));
             } else {
-                Log.w("Unlocking database", exception_.toString());
+                Log.w("Unlocking database", exception.toString());
                 passwordView_.setError(getString(R.string.error_incorrect_password));
                 passwordView_.requestFocus();
             }

@@ -5,6 +5,9 @@ import android.content.Intent;
 import android.preference.DialogPreference;
 import android.util.AttributeSet;
 
+/**
+ * Preference that pops a dialog and (upon confirmation) deletes the database.
+ */
 public final class DeleteDatabasePreference extends DialogPreference {
     public DeleteDatabasePreference(Context context, AttributeSet attrs) {
         super(context, attrs);

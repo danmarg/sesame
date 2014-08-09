@@ -1,5 +1,7 @@
 package net.af0.sesame;
 
+// A metadata message to prefix database exports with, so that at import-time
+//  we know the details needed to unlock this database.
 message Database {
   // Database version
   optional int32 version = 1;
