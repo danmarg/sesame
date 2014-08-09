@@ -226,6 +226,7 @@ public final class SQLCipherDatabase {
     }
 
     public static synchronized void DeleteDatabase(Context ctx) {
+        Lock();  // Throw away the open database handle.
         ctx.deleteDatabase(DATABASE_NAME);
     }
 
