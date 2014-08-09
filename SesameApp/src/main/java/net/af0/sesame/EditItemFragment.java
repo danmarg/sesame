@@ -43,7 +43,7 @@ public class EditItemFragment extends Fragment {
     private String remarks_;
 
     private View addItemView_;
-    View addItemFormView_;
+    private View addItemFormView_;
     private EditText usernameView_;
     private EditText domainView_;
     private EditText passwordView_;
@@ -59,7 +59,8 @@ public class EditItemFragment extends Fragment {
      * Mandatory empty constructor for the fragment manager to instantiate the fragment (e.g. upon
      * screen orientation changes).
      */
-    public EditItemFragment() { }
+    public EditItemFragment() {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -96,16 +97,16 @@ public class EditItemFragment extends Fragment {
         // Make the show/hide switch change the password field visibility.
         passwordSwitch_.setOnCheckedChangeListener(
                 new CompoundButton.OnCheckedChangeListener() {
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                                ((TextView) addItemView_.findViewById(R.id.password)).setInputType(
-                                        isChecked ?
-                                                InputType.TYPE_CLASS_TEXT |
-                                                        InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD :
-                                                InputType.TYPE_CLASS_TEXT |
-                                                        InputType.TYPE_TEXT_VARIATION_PASSWORD
-                                );
-                            }
-                        }
+                    public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                        ((TextView) addItemView_.findViewById(R.id.password)).setInputType(
+                                isChecked ?
+                                        InputType.TYPE_CLASS_TEXT |
+                                                InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD :
+                                        InputType.TYPE_CLASS_TEXT |
+                                                InputType.TYPE_TEXT_VARIATION_PASSWORD
+                        );
+                    }
+                }
         );
 
         Button generateButton = (Button) addItemView_.findViewById(R.id.generate_password_button);
@@ -159,8 +160,33 @@ public class EditItemFragment extends Fragment {
         return addItemView_;
     }
 
+    @Override
+    public void onPause() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onResume() {
+        if (progress_ != null) {
+            progress_.show();
+        }
+        super.onResume();
+    }
+
     /**
      * Generate a random password. This function successively iterates through
+     *
      * @{link net.af0.sesame.Constants.PASSWORD_CHARS} in order to generate passwords with different
      * character sets. Passwords are random-length, random-value from the current set.
      */
@@ -218,11 +244,8 @@ public class EditItemFragment extends Fragment {
         @Override
         protected void onPostExecute(final Boolean success) {
             addTask_ = null;
-            try {
-                progress_.dismiss();
-            } catch (IllegalArgumentException ex) {
-                // This can happen on window rotation.
-            }
+            progress_.dismiss();
+            progress_ = null;
             if (success) {
                 if (!twoPane_) {
                     getActivity().setResult(Activity.RESULT_OK);

@@ -57,6 +57,30 @@ public final class DeleteItemFragment extends DialogFragment {
         return builder.create();
     }
 
+    @Override
+    public void onPause() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onResume() {
+        if (progress_ != null) {
+            progress_.show();
+        }
+        super.onResume();
+    }
+
     /**
      * Represents an asynchronous database delete.
      */
@@ -79,11 +103,8 @@ public final class DeleteItemFragment extends DialogFragment {
         @Override
         protected void onPostExecute(final Boolean success) {
             deleteTask_ = null;
-            try {
-                progress_.dismiss();
-            } catch (IllegalArgumentException ex) {
-                // This can happen on window rotation.
-            }
+            progress_.dismiss();
+            progress_ = null;
             if (success) {
                 if (listActivity_ != null) {
                     listActivity_.refreshListFromDatabase();

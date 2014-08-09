@@ -93,6 +93,33 @@ public final class UnlockActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onPause() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onResume() {
+        if (progress_ != null) {
+            progress_.show();
+        }
+        super.onResume();
+    }
+
+    /**
+     * Retrieve the password set in the UI and attempt to unlock the database in a background task.
+     */
     void attemptUnlock() {
         if (unlockTask_ != null) {
             return;
@@ -152,11 +179,8 @@ public final class UnlockActivity extends Activity {
         @Override
         protected void onPostExecute(final Boolean success) {
             unlockTask_ = null;
-            try {
-                progress_.dismiss();
-            } catch (IllegalArgumentException ex) {
-                // This can happen on window rotation.
-            }
+            progress_.dismiss();
+            progress_ = null;
             if (success) {
                 // Don't finish() here--we want the "lock" button to take us back here in the stack.
                 startActivity(new Intent(getBaseContext(), ItemListActivity.class));

@@ -69,6 +69,30 @@ public final class ChangePasswordActivity extends Activity {
         });
     }
 
+    @Override
+    public void onPause() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onResume() {
+        if (progress_ != null) {
+            progress_.show();
+        }
+        super.onResume();
+    }
+
     /**
      * Common code to handle starting the password change.
      */
@@ -121,8 +145,8 @@ public final class ChangePasswordActivity extends Activity {
      * An async task to change the password.
      */
     public class ChangePasswordTask extends AsyncTask<Void, Void, Boolean> {
-        private SQLiteException exception;  // Stick any exceptions here
         private final Activity parent_;
+        private SQLiteException exception;  // Stick any exceptions here
 
         public ChangePasswordTask(Activity parent) {
             parent_ = parent;
@@ -143,11 +167,8 @@ public final class ChangePasswordActivity extends Activity {
         @Override
         protected void onPostExecute(final Boolean success) {
             changeTask_ = null;
-            try {
-                    progress_.dismiss();
-            } catch (IllegalArgumentException ex) {
-                    // This can happen on window rotation.
-            }
+            progress_.dismiss();
+            progress_ = null;
             if (success) {
                 finish();
                 startActivity(new Intent(getBaseContext(), ItemListActivity.class));

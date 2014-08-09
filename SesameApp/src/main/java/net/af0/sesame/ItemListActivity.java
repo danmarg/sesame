@@ -180,7 +180,7 @@ public final class ItemListActivity extends FragmentActivity
     }
 
     /**
-    /* Called from the child ItemListFragment on the Edit context menu.
+     * /* Called from the child ItemListFragment on the Edit context menu.
      */
     public void onEditItem(int position) {
         long id = getRecordFromPosition(position).getId();

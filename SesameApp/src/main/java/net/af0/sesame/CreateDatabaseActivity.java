@@ -137,6 +137,30 @@ public final class CreateDatabaseActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onPause() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onResume() {
+        if (progress_ != null) {
+            progress_.show();
+        }
+        super.onResume();
+    }
+
     /**
      * An async database creation task.
      */
@@ -161,11 +185,8 @@ public final class CreateDatabaseActivity extends Activity {
         @Override
         protected void onPostExecute(final Boolean success) {
             creationTask_ = null;
-            try {
-                progress_.dismiss();
-            } catch (IllegalArgumentException ex) {
-                // This can happen on window rotation.
-            }
+            progress_.dismiss();
+            progress_ = null;
             if (success) {
                 finish();
                 startActivity(new Intent(getBaseContext(), ItemListActivity.class));

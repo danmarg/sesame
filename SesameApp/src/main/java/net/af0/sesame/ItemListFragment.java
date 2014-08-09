@@ -49,7 +49,8 @@ public final class ItemListFragment extends ListFragment {
      * Mandatory empty constructor for the fragment manager to instantiate the fragment (e.g. upon
      * screen orientation changes).
      */
-    public ItemListFragment() { }
+    public ItemListFragment() {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
