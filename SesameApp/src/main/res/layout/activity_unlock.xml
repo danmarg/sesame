@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:hint="@string/password"
                 android:imeActionId="@+id/unlock"
-                android:imeActionLabel="@string/action_unlock"
+                android:imeActionLabel="@string/done"
                 android:imeOptions="actionUnspecified"
                 android:inputType="textPassword"
                 android:maxLines="1"

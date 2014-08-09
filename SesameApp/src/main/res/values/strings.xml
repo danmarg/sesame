@@ -34,6 +34,7 @@
     <string name="cancel">Cancel</string>
     <string name="create">Create</string>
     <string name="dismiss">OK</string>
+    <string name="done">Done</string>
     <string name="generate_password">Generate</string>
     <string name="show_password">Show</string>
     <string name="hide_password">Hide</string>

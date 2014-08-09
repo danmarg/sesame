@@ -41,7 +41,7 @@ public final class ChangePasswordActivity extends Activity {
         // Set up the creation form.
         passwordView_ = (EditText) findViewById(R.id.newPassword);
         password2View_ = (EditText) findViewById(R.id.newPassword2);
-        passwordView_.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        password2View_.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {
                 // On enter, do the password change.
