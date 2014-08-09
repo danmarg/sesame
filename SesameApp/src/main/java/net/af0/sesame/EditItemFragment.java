@@ -218,7 +218,11 @@ public class EditItemFragment extends Fragment {
         @Override
         protected void onPostExecute(final Boolean success) {
             addTask_ = null;
-            progress_.dismiss();
+            try {
+                progress_.dismiss();
+            } catch (IllegalArgumentException ex) {
+                // This can happen on window rotation.
+            }
             if (success) {
                 if (!twoPane_) {
                     getActivity().setResult(Activity.RESULT_OK);

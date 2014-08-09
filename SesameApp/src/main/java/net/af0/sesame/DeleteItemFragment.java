@@ -79,7 +79,11 @@ public final class DeleteItemFragment extends DialogFragment {
         @Override
         protected void onPostExecute(final Boolean success) {
             deleteTask_ = null;
-            progress_.dismiss();
+            try {
+                progress_.dismiss();
+            } catch (IllegalArgumentException ex) {
+                // This can happen on window rotation.
+            }
             if (success) {
                 if (listActivity_ != null) {
                     listActivity_.refreshListFromDatabase();

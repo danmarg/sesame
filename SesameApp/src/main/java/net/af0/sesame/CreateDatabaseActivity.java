@@ -161,7 +161,11 @@ public final class CreateDatabaseActivity extends Activity {
         @Override
         protected void onPostExecute(final Boolean success) {
             creationTask_ = null;
-            progress_.dismiss();
+            try {
+                progress_.dismiss();
+            } catch (IllegalArgumentException ex) {
+                // This can happen on window rotation.
+            }
             if (success) {
                 finish();
                 startActivity(new Intent(getBaseContext(), ItemListActivity.class));

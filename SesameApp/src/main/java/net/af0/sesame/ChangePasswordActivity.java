@@ -143,13 +143,16 @@ public final class ChangePasswordActivity extends Activity {
         @Override
         protected void onPostExecute(final Boolean success) {
             changeTask_ = null;
-            progress_.dismiss();
+            try {
+                    progress_.dismiss();
+            } catch (IllegalArgumentException ex) {
+                    // This can happen on window rotation.
+            }
             if (success) {
                 finish();
                 startActivity(new Intent(getBaseContext(), ItemListActivity.class));
             } else {
-                Common.DisplayException(parent_, getString(R.string.action_change_error),
-                        exception);
+                Common.DisplayException(parent_, getString(R.string.action_change_error), exception);
             }
         }
 

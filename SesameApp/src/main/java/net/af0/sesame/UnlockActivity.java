@@ -152,8 +152,11 @@ public final class UnlockActivity extends Activity {
         @Override
         protected void onPostExecute(final Boolean success) {
             unlockTask_ = null;
-            progress_.dismiss();
-
+            try {
+                progress_.dismiss();
+            } catch (IllegalArgumentException ex) {
+                // This can happen on window rotation.
+            }
             if (success) {
                 // Don't finish() here--we want the "lock" button to take us back here in the stack.
                 startActivity(new Intent(getBaseContext(), ItemListActivity.class));
