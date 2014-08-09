@@ -13,21 +13,18 @@
     <TextView
         android:id="@+id/username"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textSize="@dimen/front_size" />
+        android:layout_height="wrap_content" />
 
     <TextView
         android:id="@+id/domain"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textSize="@dimen/front_size" />
+        android:layout_height="wrap_content" />
 
     <TextView
         android:id="@+id/password"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:inputType="textPassword"
-        android:textSize="@dimen/front_size"
         android:typeface="monospace" />
 
     <Switch
@@ -40,7 +37,6 @@
     <TextView
         android:id="@+id/remarks"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:textSize="@dimen/front_size" />
+        android:layout_height="wrap_content" />
 
 </LinearLayout>

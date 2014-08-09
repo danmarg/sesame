@@ -259,11 +259,11 @@ public final class ItemListActivity extends FragmentActivity
     void refreshListFromDatabase() {
         itemListAdapter_ = new SimpleCursorAdapter(
                 this,
-                android.R.layout.two_line_list_item,
+                R.layout.two_line_list_item,
                 SQLCipherDatabase.getAllCursor(),
                 new String[]{SQLCipherDatabase.COLUMN_DOMAIN,
                         SQLCipherDatabase.COLUMN_USERNAME},
-                new int[]{android.R.id.text1, android.R.id.text2},
+                new int[]{R.id.text1, R.id.text2},
                 0
         );
         itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {

@@ -17,6 +17,7 @@
     <string name="title_activity_unlock">Unlock</string>
     <string name="really_delete">Really delete?</string>
     <string name="import_database_password_message">Enter the password for the imported database.</string>
+    <string name="create_database_description">Choose a password for your new keyring. You will have to remember this to view your saved passwords in the future.</string>
 
     <!-- Fields -->
     <string name="username">Username</string>

@@ -11,6 +11,11 @@
             style="@style/CreateUnlockFormContainer"
             android:orientation="vertical">
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@+id/create_database_description"/>
+
             <EditText
                 android:id="@+id/newPassword"
                 android:layout_width="match_parent"
