@@ -93,14 +93,14 @@ public final class SQLCipherDatabase {
 
     public static Cursor getAllCursor() {
         return database_.query(TABLE_KEYS, allColumns_, null, null, null, null,
-                COLUMN_DOMAIN + ", " + COLUMN_USERNAME + " DESC NOCASE");
+                COLUMN_DOMAIN + ", " + COLUMN_USERNAME + " COLLATE NOCASE DESC");
     }
 
     public static Cursor getContaining(String substr) {
         String s = DatabaseUtils.sqlEscapeString("%" + substr + "%");
         return database_.query(TABLE_KEYS, allColumns_,
                 String.format("%s LIKE %s OR %s LIKE %s", COLUMN_DOMAIN, s, COLUMN_USERNAME, s),
-                null, null, null, COLUMN_DOMAIN + ", " + COLUMN_USERNAME + " DESC NOCASE");
+                null, null, null, COLUMN_DOMAIN + ", " + COLUMN_USERNAME + " COLLATE NOCASE DESC");
     }
 
     public static Record toRecord(Cursor crs) {
