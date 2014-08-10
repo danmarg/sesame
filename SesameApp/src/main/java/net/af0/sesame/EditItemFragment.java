@@ -102,6 +102,12 @@ public class EditItemFragment extends Fragment {
             passwordView_.setText(existingRecord_.getPassword());
             domainView_.setText(existingRecord_.getDomain());
             remarksView_.setText(existingRecord_.getRemarks());
+
+            // Set title to the current item's domain in single-pane mode, but only when editing an
+            // existing item.
+            if (!twoPane_) {
+                getActivity().setTitle(existingRecord_.getDomain());
+            }
         }
 
         // Make the show/hide switch change the password field visibility.
