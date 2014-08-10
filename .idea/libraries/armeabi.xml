@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="armeabi">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/SesameApp/native-lib/armeabi.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

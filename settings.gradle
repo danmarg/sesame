@@ -1,1 +1,2 @@
-include 'SesameApp'
+include 'SesameApp', ':library'
+project(':library').projectDir = new File('ShowcaseView/library')

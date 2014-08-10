@@ -18,6 +18,25 @@
     <string name="import_database_password_message">Enter the password for the imported database.</string>
     <string name="create_database_description">Choose a password for your new Keyring. You will have to remember this to view your saved passwords in the future.</string>
 
+    <!-- Help showcase -->
+    <string name="showcase_add_title">Add keys</string>
+    <string name="showcase_add_content_in_overflow">Your Keyring is empty! Tap the &quot;Add&quot;
+        button to add new items to your Keyring.
+\n\nYou can search the items in your Keyring by tapping the search button.
+\n\nWhen you\&apos;re done, tap the lock to log out. You will have to type in your password to see
+        your Keyring the next time.
+    </string>
+        <string name="showcase_add_content_no_overflow">Your Keyring is empty! Tap the plus button
+            to add new items to your Keyring.
+\n\nYou can search the items in your Keyring by tapping the search button.
+\n\nWhen you\&apos;re done, tap the lock to log out. You will have to type in your password to see
+            your Keyring the next time.
+    </string>
+    <string name="showcase_generate_title">Generate secure passwords</string>
+    <string name="showcase_generate_text">Tap the &quot;Generate&quot; button to generate a secure password.
+\n\nIf you don\&apos;t like the first suggestion, try tapping again. Each tap generates a password from a different set of password characters.
+\n\nYou can also enter an existing password. When you\&apos;re done, tap &quot;Save&quot; to save your new item in the Keyring.</string>
+
     <!-- Fields -->
     <string name="username">Username</string>
     <string name="new_password">Password</string>

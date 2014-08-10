@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/Sesame.iml" filepath="$PROJECT_DIR$/Sesame.iml" />
       <module fileurl="file://$PROJECT_DIR$/SesameApp/SesameApp.iml" filepath="$PROJECT_DIR$/SesameApp/SesameApp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ShowcaseView/library/library.iml" filepath="$PROJECT_DIR$/ShowcaseView/library/library.iml" />
     </modules>
   </component>
 </project>

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="protobuffers">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/SesameApp/libs/protobuffers.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

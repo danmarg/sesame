@@ -85,4 +85,12 @@ class Constants {
      * Preference key for storing the serialized DatabaseMetadata proto for the current database.
      */
     static final String DB_METADATA_PREF = "db_metadata";
+    /**
+     * Single-shot key for Item List showcase view.
+     */
+    static final int SINGLE_SHOT_ITEM_LIST = 1;
+    /**
+     * Single-shot key for Edit Item showcase view.
+     */
+    static final int SINGLE_SHOT_EDIT_ITEM = 2;
 }

@@ -12,4 +12,7 @@
         <item name="android:padding">16dp</item>
     </style>
 
+    <style name="AddItemShowcase">
+        <item name="android:alpha">0.9</item>
+    </style>
 </resources>

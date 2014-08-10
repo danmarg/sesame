@@ -11,6 +11,10 @@ import android.widget.FilterQueryProvider;
 import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
 
+import com.github.amlcurran.showcaseview.ShowcaseView;
+import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
+import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
+import com.github.amlcurran.showcaseview.targets.Target;
 
 /**
  * An activity representing a list of Items. This activity has different presentations for handset
@@ -37,6 +41,9 @@ public final class ItemListActivity extends FragmentActivity
 
     private ItemListFragment itemListFragment_;
     private SimpleCursorAdapter itemListAdapter_;
+
+    // ShowcaseView for first run.
+    ShowcaseView showcase_;
 
     @Override
     protected void onResume() {
@@ -99,6 +106,28 @@ public final class ItemListActivity extends FragmentActivity
 
         itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.item_list);
+
+
+        if (SQLCipherDatabase.getCount() == 0) {
+            // Show help showcase.
+            Target t;
+            int text;
+            if (findViewById(R.id.add_button) != null) {
+                // Not in overflow
+                t = new ActionItemTarget(this, R.id.add);
+                text = R.string.showcase_add_content_no_overflow;
+            } else {
+                t = new ActionViewTarget(this, ActionViewTarget.Type.OVERFLOW);
+                text = R.string.showcase_add_content_in_overflow;
+            }
+            showcase_ = new ShowcaseView.Builder(this, true)
+                    .setTarget(t)
+                    .setContentTitle(R.string.showcase_add_title)
+                    .setContentText(text)
+                    .setStyle(R.style.AppTheme)
+                    .singleShot(Constants.SINGLE_SHOT_ITEM_LIST)
+                    .build();
+        }
     }
 
     /**

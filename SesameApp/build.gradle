@@ -1,6 +1,9 @@
 buildscript {
     repositories {
         mavenCentral()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots'
+        }
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:0.12.+'
@@ -20,7 +23,7 @@ task buildProto (type : Exec) {
     args '--java_out'
     args '.'
 }
-// TODO: Fix this to work automatically?
+
 tasks.preBuild.dependsOn(tasks.buildProto)
 
 android {
@@ -34,6 +37,7 @@ android {
 }
 
 dependencies {
+    compile 'com.github.amlcurran.showcaseview:library:5.1.0-SNAPSHOT@aar'
     compile 'com.android.support:support-v4:20.0.0'
     compile files('libs/commons-codec.jar')
     compile files('libs/guava-r09.jar')

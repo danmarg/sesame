@@ -17,6 +17,13 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.github.amlcurran.showcaseview.ShowcaseView;
+import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
+import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
+import com.github.amlcurran.showcaseview.targets.PointTarget;
+import com.github.amlcurran.showcaseview.targets.Target;
+import com.github.amlcurran.showcaseview.targets.ViewTarget;
+
 import net.sqlcipher.database.SQLiteException;
 
 import java.security.SecureRandom;
@@ -49,6 +56,9 @@ public class EditItemFragment extends Fragment {
     private EditText passwordView_;
     private EditText remarksView_;
     private Switch passwordSwitch_;
+
+    // ShowcaseView for first run.
+    ShowcaseView showcase_;
 
     // Used for password generation
     private SecureRandom rand_;
@@ -156,6 +166,17 @@ public class EditItemFragment extends Fragment {
                 }
             }
         });
+
+
+        // Show help showcase.
+        // TODO: Would be nice to set a target of the Generate button, but this seems not to work
+        // from a fragment. Also, adjust the opacity here, since it's hard to read.
+        showcase_ = new ShowcaseView.Builder(getActivity(), true)
+                .setContentTitle(R.string.showcase_generate_title)
+                .setContentText(R.string.showcase_generate_text)
+                .setStyle(R.style.AddItemShowcase)
+                .singleShot(Constants.SINGLE_SHOT_EDIT_ITEM)
+                .build();
 
         return addItemView_;
     }

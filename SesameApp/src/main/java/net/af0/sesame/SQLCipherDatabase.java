@@ -91,6 +91,17 @@ public final class SQLCipherDatabase {
         return r;
     }
 
+    public static int getCount() {
+        if (isLocked()) {
+            return -1;
+        }
+        Cursor crs = database_.rawQuery("SELECT COUNT(*) FROM " + TABLE_KEYS, null);
+        crs.moveToFirst();
+        int r = crs.getInt(0);
+        crs.close();
+        return r;
+    }
+
     public static Cursor getAllCursor() {
         return database_.query(TABLE_KEYS, allColumns_, null, null, null, null,
                 COLUMN_DOMAIN + ", " + COLUMN_USERNAME + " COLLATE NOCASE DESC");
