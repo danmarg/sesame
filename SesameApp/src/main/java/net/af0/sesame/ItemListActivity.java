@@ -1,9 +1,13 @@
 package net.af0.sesame;
 
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,10 +33,13 @@ import com.github.amlcurran.showcaseview.targets.Target;
  * for item selections.
  */
 public final class ItemListActivity extends FragmentActivity
-        implements ItemListFragment.Callbacks, SearchView.OnQueryTextListener {
+        implements ItemListFragment.Callbacks, SearchView.OnQueryTextListener,
+        LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int ADD_RECORD_REQUEST = 0;
     private static final int EDIT_RECORD_REQUEST = 1;
+
+    private static final int LOADER_ID = 1;
     // ShowcaseView for first run.
     ShowcaseView showcase_;
     /**
@@ -65,8 +72,7 @@ public final class ItemListActivity extends FragmentActivity
                 (SearchView) menu.findItem(R.id.search).getActionView();
         searchView.setOnQueryTextListener(this);
 
-        if (SQLCipherDatabase.getCount() == 0) {  // TODO: This should be async!
-            // Show help showcase.
+        // Show help showcase.
             Target t;
             int text;
             if (menu.findItem(R.id.add) != null) {
@@ -84,7 +90,6 @@ public final class ItemListActivity extends FragmentActivity
                     .setStyle(R.style.AppTheme)
                     .singleShot(Constants.SINGLE_SHOT_ITEM_LIST)
                     .build();
-        }
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -125,6 +130,26 @@ public final class ItemListActivity extends FragmentActivity
 
         itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.item_list);
+
+        itemListAdapter_ = new SimpleCursorAdapter(
+                this,
+                R.layout.two_line_list_item,
+                null,
+                new String[]{SQLCipherDatabase.COLUMN_DOMAIN,
+                        SQLCipherDatabase.COLUMN_USERNAME},
+                new int[]{R.id.text1, R.id.text2},
+                0
+        );
+        itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {
+            @Override
+            public Cursor runQuery(CharSequence constraint) {
+                return SQLCipherDatabase.getContaining(constraint.toString());
+            }
+        });
+        getSupportLoaderManager().initLoader(LOADER_ID, null, this);
+
+        itemListFragment_.setListAdapter(itemListAdapter_);
+
     }
 
     /**
@@ -279,31 +304,28 @@ public final class ItemListActivity extends FragmentActivity
         }
     }
 
+    // Implement Loader callbacks.
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
+        return new RecordCursorLoader(this);
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        itemListAdapter_.swapCursor(cursor);
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        itemListAdapter_.swapCursor(null);
+    }
+
     /**
      * Refresh the displayed list adapter from the open database.
      */
     void refreshListFromDatabase() {
-        Cursor crs = SQLCipherDatabase.getAllCursor();
-        itemListAdapter_ = new SimpleCursorAdapter(
-                this,
-                R.layout.two_line_list_item,
-                crs,
-                new String[]{SQLCipherDatabase.COLUMN_DOMAIN,
-                        SQLCipherDatabase.COLUMN_USERNAME},
-                new int[]{R.id.text1, R.id.text2},
-                0
-        );
-        itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {
-            @Override
-            public Cursor runQuery(CharSequence constraint) {
-                return SQLCipherDatabase.getContaining(constraint.toString());
-            }
-        });
-        if (itemListFragment_ == null) {
-            itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
-                    .findFragmentById(R.id.item_list);
-        }
-        itemListFragment_.setListAdapter(itemListAdapter_);
+        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     /**
@@ -311,5 +333,19 @@ public final class ItemListActivity extends FragmentActivity
      */
     private SQLCipherDatabase.Record getRecordFromPosition(int position) {
         return (SQLCipherDatabase.Record) itemListAdapter_.getItem(position);
+    }
+
+    private static class RecordCursorLoader extends CursorLoader {
+        public RecordCursorLoader(Context ctx) {
+            super(ctx);
+        }
+
+        @Override
+        public Cursor loadInBackground() {
+            if (SQLCipherDatabase.isLocked()) {
+                return null;
+            }
+            return SQLCipherDatabase.getAllCursor();
+        }
     }
 }
