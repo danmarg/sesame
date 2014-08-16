@@ -33,17 +33,15 @@ public final class ItemListActivity extends FragmentActivity
 
     private static final int ADD_RECORD_REQUEST = 0;
     private static final int EDIT_RECORD_REQUEST = 1;
+    // ShowcaseView for first run.
+    ShowcaseView showcase_;
     /**
      * Whether or not the activity is in two-pane mode, i.e. running on a tablet device.
      */
     private boolean twoPane_;
     private long selectedId_;
-
     private ItemListFragment itemListFragment_;
     private SimpleCursorAdapter itemListAdapter_;
-
-    // ShowcaseView for first run.
-    ShowcaseView showcase_;
 
     @Override
     protected void onResume() {
@@ -66,6 +64,27 @@ public final class ItemListActivity extends FragmentActivity
         SearchView searchView =
                 (SearchView) menu.findItem(R.id.search).getActionView();
         searchView.setOnQueryTextListener(this);
+
+        if (SQLCipherDatabase.getCount() == 0) {  // TODO: This should be async!
+            // Show help showcase.
+            Target t;
+            int text;
+            if (menu.findItem(R.id.add) != null) {
+                // Not in overflow
+                t = new ActionItemTarget(this, R.id.add);
+                text = R.string.showcase_add_content_no_overflow;
+            } else {
+                t = new ActionViewTarget(this, ActionViewTarget.Type.OVERFLOW);
+                text = R.string.showcase_add_content_in_overflow;
+            }
+            showcase_ = new ShowcaseView.Builder(this, true)
+                    .setTarget(t)
+                    .setContentTitle(R.string.showcase_add_title)
+                    .setContentText(text)
+                    .setStyle(R.style.AppTheme)
+                    .singleShot(Constants.SINGLE_SHOT_ITEM_LIST)
+                    .build();
+        }
 
         return super.onCreateOptionsMenu(menu);
     }
@@ -106,28 +125,6 @@ public final class ItemListActivity extends FragmentActivity
 
         itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.item_list);
-
-
-        if (SQLCipherDatabase.getCount() == 0) {
-            // Show help showcase.
-            Target t;
-            int text;
-            if (findViewById(R.id.add) != null) {
-                // Not in overflow
-                t = new ActionItemTarget(this, R.id.add);
-                text = R.string.showcase_add_content_no_overflow;
-            } else {
-                t = new ActionViewTarget(this, ActionViewTarget.Type.OVERFLOW);
-                text = R.string.showcase_add_content_in_overflow;
-            }
-            showcase_ = new ShowcaseView.Builder(this, true)
-                    .setTarget(t)
-                    .setContentTitle(R.string.showcase_add_title)
-                    .setContentText(text)
-                    .setStyle(R.style.AppTheme)
-                    .singleShot(Constants.SINGLE_SHOT_ITEM_LIST)
-                    .build();
-        }
     }
 
     /**
@@ -286,10 +283,11 @@ public final class ItemListActivity extends FragmentActivity
      * Refresh the displayed list adapter from the open database.
      */
     void refreshListFromDatabase() {
+        Cursor crs = SQLCipherDatabase.getAllCursor();
         itemListAdapter_ = new SimpleCursorAdapter(
                 this,
                 R.layout.two_line_list_item,
-                SQLCipherDatabase.getAllCursor(),
+                crs,
                 new String[]{SQLCipherDatabase.COLUMN_DOMAIN,
                         SQLCipherDatabase.COLUMN_USERNAME},
                 new int[]{R.id.text1, R.id.text2},
