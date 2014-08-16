@@ -29,6 +29,9 @@ public final class ItemDetailActivity extends FragmentActivity {
         if (getActionBar() != null) {
             getActionBar().setDisplayHomeAsUpEnabled(true);
         }
+        // Set the title to the current item's domain.
+        long id = getIntent().getLongExtra(Constants.ARG_ITEM_ID, -1);
+        setTitle(SQLCipherDatabase.getRecord(id).getDomain());
 
         if (savedInstanceState == null) {
             // Create the detail fragment and add it to the activity

@@ -20,6 +20,8 @@ import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
 import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
 import com.github.amlcurran.showcaseview.targets.Target;
 
+import net.sqlcipher.CursorWrapper;
+
 /**
  * An activity representing a list of Items. This activity has different presentations for handset
  * and tablet-size devices. On handsets, the activity presents a list of items, which when touched,
@@ -234,7 +236,7 @@ public final class ItemListActivity extends FragmentActivity
      * /* Called from the child ItemListFragment on the Edit context menu.
      */
     public void onEditItem(int position) {
-        long id = getRecordFromPosition(position).getId();
+        long id = getRecordFromPosition(position);
         if (twoPane_) {
             Bundle arguments = new Bundle();
             arguments.putBoolean(Constants.ARG_TWO_PANE, true);
@@ -257,7 +259,7 @@ public final class ItemListActivity extends FragmentActivity
      * Called from the child ItemListFragment on the Edit context menu.
      */
     public void onDeleteItem(int position) {
-        long id = getRecordFromPosition(position).getId();
+        long id = getRecordFromPosition(position);
         Bundle arguments = new Bundle();
         arguments.putLong(Constants.ARG_ITEM_ID, id);
         DeleteItemFragment fragment = new DeleteItemFragment();
@@ -331,8 +333,8 @@ public final class ItemListActivity extends FragmentActivity
     /**
      * Get the record object for the specified offset in the list.
      */
-    private SQLCipherDatabase.Record getRecordFromPosition(int position) {
-        return (SQLCipherDatabase.Record) itemListAdapter_.getItem(position);
+    private long getRecordFromPosition(int position) {
+        return ((CursorWrapper)itemListAdapter_.getItem(position)).getLong(0);
     }
 
     private static class RecordCursorLoader extends CursorLoader {
