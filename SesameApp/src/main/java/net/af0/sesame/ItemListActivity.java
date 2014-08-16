@@ -163,8 +163,7 @@ public final class ItemListActivity extends FragmentActivity
         switch (item.getItemId()) {
             case R.id.action_lock:
                 startActivity(new Intent(this, UnlockActivity.class).setFlags(
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |
-                                Intent.FLAG_ACTIVITY_NEW_TASK
+                        Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK
                 ));
                 return true;
             case R.id.action_export:
