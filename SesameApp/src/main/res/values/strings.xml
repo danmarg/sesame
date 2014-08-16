@@ -59,11 +59,11 @@
     <string name="hide_password">Hide</string>
 
     <!-- Progress text -->
-    <string name="creating_database_progress">Creating Keyring&#8230;</string>
-    <string name="save_progress_saving">Saving key&#8230;</string>
-    <string name="delete_progress_deleting">Deleting key&#8230;</string>
-    <string name="changing_password_progress">Changing password&#8230;</string>
-    <string name="unlock_progress_unlocking">Unlocking Keyring&#8230;</string>
+    <string name="creating_database_progress">Creating Keyring</string>
+    <string name="save_progress_saving">Saving key</string>
+    <string name="delete_progress_deleting">Deleting key</string>
+    <string name="changing_password_progress">Changing password</string>
+    <string name="unlock_progress_unlocking">Unlocking Keyring</string>
 
     <!-- Error text -->
     <string name="error_creating_database">Error creating Keyring!</string>

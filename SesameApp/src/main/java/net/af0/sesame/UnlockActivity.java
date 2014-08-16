@@ -37,11 +37,6 @@ public final class UnlockActivity extends Activity {
 
         setContentView(R.layout.activity_unlock);
 
-        // Lock (if we're coming from the "lock" button.
-        if (!SQLCipherDatabase.isLocked()) {
-            SQLCipherDatabase.Lock();
-        }
-
         // If the database does not yet exist, redirect to the CreateDatabaseActivity.
         if (!SQLCipherDatabase.Exists(this)) {
             startActivity(new Intent(getBaseContext(), CreateDatabaseActivity.class).setFlags(
@@ -114,6 +109,12 @@ public final class UnlockActivity extends Activity {
         if (progress_ != null) {
             progress_.show();
         }
+
+        // Lock (if we're coming from the "lock" button.
+        if (!SQLCipherDatabase.isLocked() && unlockTask_ == null) {
+            SQLCipherDatabase.Lock();
+        }
+
         super.onResume();
     }
 

@@ -112,7 +112,7 @@ public final class ItemListActivity extends FragmentActivity
             // Show help showcase.
             Target t;
             int text;
-            if (findViewById(R.id.add_button) != null) {
+            if (findViewById(R.id.add) != null) {
                 // Not in overflow
                 t = new ActionItemTarget(this, R.id.add);
                 text = R.string.showcase_add_content_no_overflow;
