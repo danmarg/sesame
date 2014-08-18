@@ -207,14 +207,14 @@ public final class ItemListActivity extends FragmentActivity
             case ADD_RECORD_REQUEST:
                 if (resultCode == RESULT_OK) {
                     refreshListFromDatabase();
-                    // TODO: set selection to added item
+                    onItemSelected(String.valueOf(data.getLongExtra(Constants.ARG_ITEM_ID, -1)));
                 }
                 break;
             case EDIT_RECORD_REQUEST:
                 if (resultCode == RESULT_OK) {
                     refreshListFromDatabase();
+                    onItemSelected(String.valueOf(selectedId_));
                 }
-                onItemSelected(String.valueOf(selectedId_));
                 break;
             case Constants.IMPORT_DATABASE_RESULT:
                 if (resultCode == RESULT_OK) {

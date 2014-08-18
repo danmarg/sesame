@@ -2,6 +2,7 @@ package net.af0.sesame;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -275,7 +276,8 @@ public class EditItemFragment extends Fragment {
             progress_ = null;
             if (success) {
                 if (!twoPane_) {
-                    getActivity().setResult(Activity.RESULT_OK);
+                    getActivity().setResult(Activity.RESULT_OK,
+                            new Intent().putExtra(Constants.ARG_ITEM_ID, newRecordId_));
                     getActivity().finish();
                 } else {
                     ItemListActivity activity = (ItemListActivity) getActivity();
