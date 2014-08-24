@@ -22,6 +22,8 @@ import com.github.amlcurran.showcaseview.targets.Target;
 
 import net.sqlcipher.CursorWrapper;
 
+import java.security.KeyRep;
+
 /**
  * An activity representing a list of Items. This activity has different presentations for handset
  * and tablet-size devices. On handsets, the activity presents a list of items, which when touched,
@@ -75,23 +77,24 @@ public final class ItemListActivity extends FragmentActivity
         searchView.setOnQueryTextListener(this);
 
         // Show help showcase.
-            Target t;
-            int text;
-            if (menu.findItem(R.id.add) != null) {
-                // Not in overflow
-                t = new ActionItemTarget(this, R.id.add);
-                text = R.string.showcase_add_content_no_overflow;
-            } else {
-                t = new ActionViewTarget(this, ActionViewTarget.Type.OVERFLOW);
-                text = R.string.showcase_add_content_in_overflow;
-            }
-            showcase_ = new ShowcaseView.Builder(this, true)
-                    .setTarget(t)
-                    .setContentTitle(R.string.showcase_add_title)
-                    .setContentText(text)
-                    .setStyle(R.style.AppTheme)
-                    .singleShot(Constants.SINGLE_SHOT_ITEM_LIST)
-                    .build();
+        Target t = new ActionItemTarget(this, R.id.add);
+        int text;
+        try {
+            // This seems to be the only way to tell if the action bar item is visible?
+            // See https://github.com/amlcurran/ShowcaseView/issues/195.
+            t.getPoint();
+            text = R.string.showcase_add_content_no_overflow;
+        } catch (NullPointerException ex) {
+            t = new ActionViewTarget(this, ActionViewTarget.Type.OVERFLOW);
+            text = R.string.showcase_add_content_in_overflow;
+        }
+        showcase_ = new ShowcaseView.Builder(this, true)
+                .setTarget(t)
+                .setContentTitle(R.string.showcase_add_title)
+                .setContentText(text)
+                .setStyle(R.style.AppTheme)
+                .singleShot(Constants.SINGLE_SHOT_ITEM_LIST)
+                .build();
 
         return super.onCreateOptionsMenu(menu);
     }
