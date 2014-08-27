@@ -19,11 +19,6 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
-import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
-import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
-import com.github.amlcurran.showcaseview.targets.PointTarget;
-import com.github.amlcurran.showcaseview.targets.Target;
-import com.github.amlcurran.showcaseview.targets.ViewTarget;
 
 import net.sqlcipher.database.SQLiteException;
 
@@ -34,7 +29,7 @@ import java.security.SecureRandom;
  * This fragment is either contained in a {@link net.af0.sesame.ItemListActivity} in two-pane mode
  * (on tablets) or a {@link net.af0.sesame.EditItemActivity} on handsets.
  */
-public class EditItemFragment extends Fragment {
+public class EditItemFragment extends Fragment implements Common.DatabaseLoadCallbacks {
     // Progress spinner for saving changes
     private ProgressDialog progress_;
     // Async task for adding an item
@@ -80,15 +75,13 @@ public class EditItemFragment extends Fragment {
         if (getArguments().containsKey(Constants.ARG_TWO_PANE)) {
             twoPane_ = getArguments().getBoolean(Constants.ARG_TWO_PANE);
         }
-        if (getArguments().containsKey(Constants.ARG_ITEM_ID)) {
-            existingRecord_ = SQLCipherDatabase.getRecord(
-                    getArguments().getLong(Constants.ARG_ITEM_ID, -1));
-        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        progress_ = new ProgressDialog(getActivity());
+        progress_.setCancelable(false);
         addItemView_ = inflater.inflate(R.layout.fragment_edit_item, container, false);
         addItemFormView_ = addItemView_.findViewById(R.id.add_item_form);
 
@@ -97,19 +90,6 @@ public class EditItemFragment extends Fragment {
         passwordView_ = (EditText) addItemFormView_.findViewById(R.id.password);
         remarksView_ = (EditText) addItemFormView_.findViewById(R.id.remarks);
         passwordSwitch_ = ((Switch) addItemView_.findViewById(R.id.show_password));
-
-        if (existingRecord_ != null) {
-            usernameView_.setText(existingRecord_.getUsername());
-            passwordView_.setText(existingRecord_.getPassword());
-            domainView_.setText(existingRecord_.getDomain());
-            remarksView_.setText(existingRecord_.getRemarks());
-
-            // Set title to the current item's domain in single-pane mode, but only when editing an
-            // existing item.
-            if (!twoPane_) {
-                getActivity().setTitle(existingRecord_.getDomain());
-            }
-        }
 
         // Make the show/hide switch change the password field visibility.
         passwordSwitch_.setOnCheckedChangeListener(
@@ -165,7 +145,6 @@ public class EditItemFragment extends Fragment {
                     focusView.requestFocus();
                 } else {
                     // Show a progress spinner and begin unlocking in the background.
-                    progress_ = new ProgressDialog(getActivity());
                     progress_.setTitle(R.string.save_progress_saving);
                     progress_.show();
                     addTask_ = new AddTask();
@@ -184,6 +163,15 @@ public class EditItemFragment extends Fragment {
                 .setStyle(R.style.AddItemShowcase)
                 .singleShot(Constants.SINGLE_SHOT_EDIT_ITEM)
                 .build();
+
+        // Load an existing item in the background, if specified.
+        if (getArguments().containsKey(Constants.ARG_ITEM_ID)) {
+            progress_.setTitle(R.string.progress_loading);
+            progress_.show();
+            Common.LoadRecordFromDatabase(getArguments().getLong(Constants.ARG_ITEM_ID), this);
+            existingRecord_ = SQLCipherDatabase.getRecord(
+                    getArguments().getLong(Constants.ARG_ITEM_ID, -1));
+        }
 
         return addItemView_;
     }
@@ -237,6 +225,27 @@ public class EditItemFragment extends Fragment {
         passwordView_.setText(s);
     }
 
+    /**
+     * Callback from async database load.
+     * @param item
+     */
+    public void OnLoadRecord(SQLCipherDatabase.Record item) {
+        progress_.dismiss();
+        existingRecord_ = item;
+        if (existingRecord_ == null) {
+            return;
+        }
+        usernameView_.setText(existingRecord_.getUsername());
+        passwordView_.setText(existingRecord_.getPassword());
+        domainView_.setText(existingRecord_.getDomain());
+        remarksView_.setText(existingRecord_.getRemarks());
+
+        // Set title to the current item's domain in single-pane mode, but only when editing an
+        // existing item.
+        if (!twoPane_) {
+            getActivity().setTitle(existingRecord_.getDomain());
+        }
+    }
     /**
      * Represents an asynchronous database add.
      */

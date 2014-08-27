@@ -1,5 +1,6 @@
 package net.af0.sesame;
 
+import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.InputType;
@@ -15,10 +16,10 @@ import android.widget.TextView;
  * This fragment is either contained in a {@link ItemListActivity} in two-pane mode (on tablets) or
  * a {@link ItemDetailActivity} on handsets.
  */
-public class ItemDetailFragment extends Fragment {
+public class ItemDetailFragment extends Fragment implements Common.DatabaseLoadCallbacks {
     // The item we're showing details for.
     SQLCipherDatabase.Record item_;
-
+    ProgressDialog progress_;
     private View rootView_;
 
     /**
@@ -31,6 +32,9 @@ public class ItemDetailFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView_ = inflater.inflate(R.layout.fragment_item_detail, container, false);
+
+        progress_ = new ProgressDialog(getActivity());
+        progress_.setCancelable(false);
 
         loadFromDatabase();
 
@@ -57,7 +61,22 @@ public class ItemDetailFragment extends Fragment {
      * Load (or reload) the list from the open database.
      */
     void loadFromDatabase() {
-        item_ = SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID));
+        progress_.setTitle(R.string.progress_loading);
+        progress_.show();
+        Common.LoadRecordFromDatabase(getArguments().getLong(Constants.ARG_ITEM_ID), this);
+    }
+
+    /**
+     * Callback from async database load.
+     *
+     * @param item
+     */
+    public void OnLoadRecord(SQLCipherDatabase.Record item) {
+        progress_.dismiss();
+        item_ = item;
+        if (item_ == null) {
+            return;
+        }
         TextView usernameView_ = ((TextView) rootView_.findViewById(R.id.username));
         TextView passwordView_ = ((TextView) rootView_.findViewById(R.id.password));
         TextView domainView_ = ((TextView) rootView_.findViewById(R.id.domain));

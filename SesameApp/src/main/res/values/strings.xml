@@ -64,6 +64,8 @@
     <string name="delete_progress_deleting">Deleting key</string>
     <string name="changing_password_progress">Changing password</string>
     <string name="unlock_progress_unlocking">Unlocking Keyring</string>
+    <string name="progress_loading">Loading</string>
+
 
     <!-- Error text -->
     <string name="error_creating_database">Error creating Keyring!</string>
