@@ -54,7 +54,7 @@ public final class SQLCipherDatabase {
     public static void createRecord(final String username, final String domain,
                                       final String password, final String remarks,
                                       final Callbacks<Record> callbacks) {
-        new AsyncTask<Void, Void, Boolean>(){
+        AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>(){
             Record r;
             Exception exception;
 
@@ -95,7 +95,20 @@ public final class SQLCipherDatabase {
                     callbacks.OnCancelled();
                 }
             }
-        }.execute();
+        };
+        if (callbacks != null) {
+            task.execute();
+        } else {
+            ContentValues values = new ContentValues();
+            values.put(COLUMN_USERNAME, username);
+            values.put(COLUMN_DOMAIN, domain);
+            values.put(COLUMN_PASSWORD, password);
+            values.put(COLUMN_REMARKS, remarks);
+            long id = database_.insert(TABLE_KEYS, null, values);
+            Cursor crs = database_.query(TABLE_KEYS, allColumns_,
+                    COLUMN_ID + "=" + id, null, null, null, null);
+            crs.close();
+        }
     }
 
     public static void deleteRecord(final long record_id,
@@ -307,9 +320,6 @@ public final class SQLCipherDatabase {
                                       final char[] password, final Callbacks<Boolean> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Exception exception;
-            // Block on all the database insertions being successful.
-            Semaphore inserts = new Semaphore(0);
-            int nInserts = 0;
 
             @Override
             public Boolean doInBackground(Void... param) {
@@ -350,30 +360,10 @@ public final class SQLCipherDatabase {
                             null);
                     for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
                         Record r = toRecord(crs);
-                        Callbacks<Record> cb = new Callbacks<Record>() {
-                            @Override
-                            public void OnFinish(Record x) {
-                                inserts.release();
-                            }
-
-                            @Override
-                            public void OnException(Exception exception) {
-                            }
-
-                            @Override
-                            public void OnCancelled() {
-                            }
-                        };
-                        nInserts++;
                         createRecord(r.getUsername(), r.getDomain(), r.getPassword(),
-                                r.getRemarks(), cb);
+                                r.getRemarks(), null);
                     }
                     crs.close();
-                    try {
-                        inserts.tryAcquire(nInserts, Constants.INSERT_DATABASE_TIMEOUT_SECS,
-                                TimeUnit.SECONDS);
-                    } catch (InterruptedException e) {
-                    }
                     return true;
                 } catch (Exception e) {
                     exception = e;
