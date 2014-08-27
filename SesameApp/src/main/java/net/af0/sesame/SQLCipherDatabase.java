@@ -5,12 +5,14 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
+import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import net.sqlcipher.Cursor;
+import net.sqlcipher.SQLException;
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteDatabaseHook;
 
@@ -49,46 +51,153 @@ public final class SQLCipherDatabase {
     private static net.sqlcipher.database.SQLiteOpenHelper helper_;
     private static SQLiteDatabase database_;
 
-    public static Record createRecord(String username, String domain, String password,
-                                      String remarks) {
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_USERNAME, username);
-        values.put(COLUMN_DOMAIN, domain);
-        values.put(COLUMN_PASSWORD, password);
-        values.put(COLUMN_REMARKS, remarks);
-        long id = database_.insert(TABLE_KEYS, null, values);
-        Cursor crs = database_.query(TABLE_KEYS, allColumns_,
-                COLUMN_ID + "=" + id, null, null, null, null);
-        crs.moveToFirst();
-        Record r = toRecord(crs);
-        crs.close();
-        return r;
+
+    /**
+     * An object implementing this must be passed to getRecord or createRecord, to give a callback
+     * to pass the resulting record to upon completion.
+     */
+    static interface Callbacks {
+        void OnLoadRecord(Record record);
+        void OnException(SQLException exception);
+        void OnSaveRecord(boolean success, Record record);
+        void OnCancelled();
     }
 
-    public static void deleteRecord(Record r) {
-        database_.delete(TABLE_KEYS, COLUMN_ID + "=" + r.getId(), null);
+    public static void createRecord(final String username, final String domain,
+                                      final String password, final String remarks,
+                                      final Callbacks callbacks) {
+        new AsyncTask<Void, Void, Boolean>(){
+            Record r;
+            SQLException exception;
+            @Override
+            public Boolean doInBackground(Void... param) {
+                try {
+                    ContentValues values = new ContentValues();
+                    values.put(COLUMN_USERNAME, username);
+                    values.put(COLUMN_DOMAIN, domain);
+                    values.put(COLUMN_PASSWORD, password);
+                    values.put(COLUMN_REMARKS, remarks);
+                    long id = database_.insert(TABLE_KEYS, null, values);
+                    Cursor crs = database_.query(TABLE_KEYS, allColumns_,
+                            COLUMN_ID + "=" + id, null, null, null, null);
+                    crs.moveToFirst();
+                    r = toRecord(crs);
+                    crs.close();
+                    return r != null;
+                } catch(SQLException e) {
+                    exception = e;
+                    return false;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(final Boolean success) {
+                if (callbacks != null) {
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnLoadRecord(r);
+                    }
+                }
+            }
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
     }
 
-    public static void updateRecord(Record r) {
-        ContentValues values = new ContentValues();
-        values.put(COLUMN_USERNAME, r.getUsername());
-        values.put(COLUMN_DOMAIN, r.getDomain());
-        values.put(COLUMN_PASSWORD, r.getPassword());
-        values.put(COLUMN_REMARKS, r.getRemarks());
-        database_.update(TABLE_KEYS, values, COLUMN_ID + "=" + r.getId(), null);
+    public static void deleteRecord(final long record_id, final Callbacks callbacks) {
+        new AsyncTask<Void, Void, Boolean>() {
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                database_.delete(TABLE_KEYS, COLUMN_ID + "=" + record_id, null);
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(final Boolean result) {
+                if (callbacks != null) {
+                    callbacks.OnSaveRecord(result, null);
+                }
+            }
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
     }
 
-    public static Record getRecord(long record_id) {
-        Cursor crs = database_.query(TABLE_KEYS, allColumns_,
-                COLUMN_ID + "=" + record_id,
-                null, null, null, null);
-        if (crs.getCount() == 0) {
-            return null;
-        }
-        crs.moveToFirst();
-        Record r = toRecord(crs);
-        crs.close();
-        return r;
+    public static void updateRecord(final Record r, final Callbacks callbacks) {
+        new AsyncTask<Void, Void, Boolean>() {
+            SQLException exception;
+            @Override
+            protected Boolean doInBackground(Void... params) {
+                ContentValues values = new ContentValues();
+                values.put(COLUMN_USERNAME, r.getUsername());
+                values.put(COLUMN_DOMAIN, r.getDomain());
+                values.put(COLUMN_PASSWORD, r.getPassword());
+                values.put(COLUMN_REMARKS, r.getRemarks());
+                try {
+                    database_.update(TABLE_KEYS, values, COLUMN_ID + "=" + r.getId(), null);
+                } catch (SQLException e) {
+                    exception = e;
+                }
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(final Boolean result) {
+                if (callbacks != null) {
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnSaveRecord(result, r);
+                    }
+                }
+            }
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
+    }
+
+    public static void getRecord(final long record_id,  final Callbacks callbacks) {
+        new AsyncTask<Void, Void, Boolean>(){
+            Record r;
+            @Override
+            public Boolean doInBackground(Void... param) {
+                Cursor crs = database_.query(TABLE_KEYS, allColumns_,
+                        COLUMN_ID + "=" + record_id,
+                        null, null, null, null);
+                if (crs.getCount() == 0) {
+                    crs.close();
+                    return false;
+                }
+                crs.moveToFirst();
+                r = toRecord(crs);
+                crs.close();
+                return r != null;
+            }
+
+            @Override
+            protected void onPostExecute(final Boolean success) {
+                callbacks.OnLoadRecord(r);
+            }
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
     }
 
     public static Cursor getAllCursor() {
@@ -190,7 +299,7 @@ public final class SQLCipherDatabase {
                 null);
         for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
             Record r = toRecord(crs);
-            createRecord(r.getUsername(), r.getDomain(), r.getPassword(), r.getRemarks());
+            createRecord(r.getUsername(), r.getDomain(), r.getPassword(), r.getRemarks(), null);
         }
         crs.close();
     }

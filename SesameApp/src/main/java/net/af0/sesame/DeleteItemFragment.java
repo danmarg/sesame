@@ -10,15 +10,14 @@ import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
 
+import net.sqlcipher.SQLException;
 import net.sqlcipher.database.SQLiteException;
 
-public final class DeleteItemFragment extends DialogFragment {
+public final class DeleteItemFragment extends DialogFragment implements SQLCipherDatabase.Callbacks {
     private ProgressDialog progress_;
     private ItemListActivity listActivity_;
     private ItemDetailActivity detailActivity_;
     private long itemId_;
-    // Async task for deleting an item
-    private DeleteTask deleteTask_ = null;
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
@@ -41,11 +40,7 @@ public final class DeleteItemFragment extends DialogFragment {
         builder.setMessage(R.string.really_delete)
                 .setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int id) {
-                        progress_ = new ProgressDialog(getActivity());
-                        progress_.setTitle(R.string.delete_progress_deleting);
-                        progress_.show();
-                        deleteTask_ = new DeleteTask();
-                        deleteTask_.execute((Void) null);
+                        deleteRecord();
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -81,49 +76,37 @@ public final class DeleteItemFragment extends DialogFragment {
         super.onResume();
     }
 
-    /**
-     * Represents an asynchronous database delete.
-     */
-    public class DeleteTask extends AsyncTask<Void, Void, Boolean> {
-        private SQLiteException exception_;
+    private void deleteRecord() {
+        progress_ = new ProgressDialog(getActivity());
+        progress_.setTitle(R.string.delete_progress_deleting);
+        progress_.show();
+        SQLCipherDatabase.deleteRecord(itemId_, this);
+    }
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            try {
-                SQLCipherDatabase.deleteRecord(SQLCipherDatabase.getRecord(itemId_));
-            } catch (SQLiteException e) {
-                Log.w("Deleting record: %s", e.toString());
-                exception_ = e;
-                progress_.dismiss();
-                return false;
-            }
-            return true;
-        }
+    public void OnLoadRecord(SQLCipherDatabase.Record r) {
+        throw new UnsupportedOperationException("OnLoadRecord");
+    }
 
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            deleteTask_ = null;
-            progress_.dismiss();
-            progress_ = null;
-            if (success) {
-                if (listActivity_ != null) {
-                    listActivity_.refreshListFromDatabase();
-                    listActivity_.onItemSelected(null);
-                }
-                if (detailActivity_ != null) {
-                    detailActivity_.finish();
-                }
-            } else {
-                Log.e("DELETE", exception_.toString());
-                Common.DisplayException(getActivity(),
-                        getString(R.string.error_deleting_item_title),
-                        exception_);
-            }
+    public void OnSaveRecord(boolean success, SQLCipherDatabase.Record r) {
+        progress_.dismiss();
+        if (listActivity_ != null) {
+            listActivity_.refreshListFromDatabase();
+            listActivity_.onItemSelected(null);
         }
+        if (detailActivity_ != null) {
+            detailActivity_.finish();
+        }
+    }
 
-        @Override
-        protected void onCancelled() {
-            deleteTask_ = null;
-        }
+    public void OnException(SQLException exception) {
+        progress_.dismiss();
+        Log.e("DELETE", exception.toString());
+        Common.DisplayException(getActivity(),
+                getString(R.string.error_deleting_item_title),
+                exception);
+    }
+
+    public void OnCancelled() {
+        progress_.dismiss();
     }
 }

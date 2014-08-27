@@ -1,9 +1,11 @@
 package net.af0.sesame;
 
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,12 +13,14 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import net.sqlcipher.SQLException;
+
 /**
  * A fragment representing a single Item detail screen.
  * This fragment is either contained in a {@link ItemListActivity} in two-pane mode (on tablets) or
  * a {@link ItemDetailActivity} on handsets.
  */
-public class ItemDetailFragment extends Fragment implements Common.DatabaseLoadCallbacks {
+public class ItemDetailFragment extends Fragment implements SQLCipherDatabase.Callbacks {
     // The item we're showing details for.
     SQLCipherDatabase.Record item_;
     ProgressDialog progress_;
@@ -63,7 +67,7 @@ public class ItemDetailFragment extends Fragment implements Common.DatabaseLoadC
     void loadFromDatabase() {
         progress_.setTitle(R.string.progress_loading);
         progress_.show();
-        Common.LoadRecordFromDatabase(getArguments().getLong(Constants.ARG_ITEM_ID), this);
+        SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID, -1), this);
     }
 
     /**
@@ -114,5 +118,17 @@ public class ItemDetailFragment extends Fragment implements Common.DatabaseLoadC
         if (getActivity().getTitle().length() == 0) {
             getActivity().setTitle(item_.getDomain());
         }
+    }
+
+    public void OnCancelled() {
+        progress_.dismiss();
+    }
+
+    public void OnSaveRecord(boolean result, SQLCipherDatabase.Record record) {
+        throw new UnsupportedOperationException("OnSaveRecord");
+    }
+
+    public void OnException(SQLException exception) {
+        Log.e("DETAIL", exception.toString());
     }
 }

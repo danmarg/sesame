@@ -20,6 +20,7 @@ import android.widget.TextView;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
 
+import net.sqlcipher.SQLException;
 import net.sqlcipher.database.SQLiteException;
 
 import java.security.SecureRandom;
@@ -29,11 +30,9 @@ import java.security.SecureRandom;
  * This fragment is either contained in a {@link net.af0.sesame.ItemListActivity} in two-pane mode
  * (on tablets) or a {@link net.af0.sesame.EditItemActivity} on handsets.
  */
-public class EditItemFragment extends Fragment implements Common.DatabaseLoadCallbacks {
+public class EditItemFragment extends Fragment implements SQLCipherDatabase.Callbacks {
     // Progress spinner for saving changes
     private ProgressDialog progress_;
-    // Async task for adding an item
-    private AddTask addTask_ = null;
     // Whether we're in two-pane mode, which dictates how we complete after adding.
     private boolean twoPane_;
     // ID of the record being edited, if it's not a new one.
@@ -118,9 +117,6 @@ public class EditItemFragment extends Fragment implements Common.DatabaseLoadCal
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (addTask_ != null) {
-                    return;
-                }
                 username_ = usernameView_.getText().toString();
                 domain_ = domainView_.getText().toString();
                 password_ = passwordView_.getText().toString();
@@ -147,8 +143,7 @@ public class EditItemFragment extends Fragment implements Common.DatabaseLoadCal
                     // Show a progress spinner and begin unlocking in the background.
                     progress_.setTitle(R.string.save_progress_saving);
                     progress_.show();
-                    addTask_ = new AddTask();
-                    addTask_.execute((Void) null);
+                    addRecord();
                 }
             }
         });
@@ -168,9 +163,7 @@ public class EditItemFragment extends Fragment implements Common.DatabaseLoadCal
         if (getArguments().containsKey(Constants.ARG_ITEM_ID)) {
             progress_.setTitle(R.string.progress_loading);
             progress_.show();
-            Common.LoadRecordFromDatabase(getArguments().getLong(Constants.ARG_ITEM_ID), this);
-            existingRecord_ = SQLCipherDatabase.getRecord(
-                    getArguments().getLong(Constants.ARG_ITEM_ID, -1));
+            SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID), this);
         }
 
         return addItemView_;
@@ -227,6 +220,7 @@ public class EditItemFragment extends Fragment implements Common.DatabaseLoadCal
 
     /**
      * Callback from async database load.
+     *
      * @param item
      */
     public void OnLoadRecord(SQLCipherDatabase.Record item) {
@@ -246,73 +240,48 @@ public class EditItemFragment extends Fragment implements Common.DatabaseLoadCal
             getActivity().setTitle(existingRecord_.getDomain());
         }
     }
-    /**
-     * Represents an asynchronous database add.
-     */
-    public class AddTask extends AsyncTask<Void, Void, Boolean> {
-        private SQLiteException exception;
-        private long newRecordId_;
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            try {
-                if (existingRecord_ != null) {
-                    newRecordId_ = existingRecord_.getId();
-                    existingRecord_.setUsername(username_);
-                    existingRecord_.setDomain(domain_);
-                    existingRecord_.setPassword(password_);
-                    existingRecord_.setRemarks(remarks_);
-                    SQLCipherDatabase.updateRecord(existingRecord_);
-                } else {
-                    newRecordId_ = SQLCipherDatabase.createRecord(
-                            username_, domain_, password_, remarks_).getId();
-                }
-            } catch (SQLiteException e) {
-                Log.w("EDITING", e.toString());
-                exception = e;
-                if (!twoPane_) {
-                    getActivity().setResult(Activity.RESULT_CANCELED);
-                }
-                return false;
-            }
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            addTask_ = null;
-            progress_.dismiss();
-            progress_ = null;
-            if (success) {
-                if (!twoPane_) {
-                    getActivity().setResult(Activity.RESULT_OK,
-                            new Intent().putExtra(Constants.ARG_ITEM_ID, newRecordId_));
-                    getActivity().finish();
-                } else {
-                    ItemListActivity activity = (ItemListActivity) getActivity();
-                    if (activity != null) {
-                        activity.refreshListFromDatabase();
-                        activity.onItemSelected(String.valueOf(newRecordId_));
-                    }
-                }
-            } else {
-                Log.e("EDIT", exception.toString());
-                Common.DisplayException(getActivity(),
-                        getString(R.string.error_saving_item_title),
-                        exception);
-                if (!twoPane_) {
-                    getActivity().setResult(Activity.RESULT_CANCELED);
-                }
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
+    public void OnSaveRecord(boolean success, SQLCipherDatabase.Record record) {
+        progress_.dismiss();
+        if (success) {
             if (!twoPane_) {
-                getActivity().setResult(Activity.RESULT_CANCELED);
+                getActivity().setResult(Activity.RESULT_OK,
+                        new Intent().putExtra(Constants.ARG_ITEM_ID, record.getId()));
+                getActivity().finish();
+            } else {
+                ItemListActivity activity = (ItemListActivity) getActivity();
+                if (activity != null) {
+                    activity.refreshListFromDatabase();
+                    activity.onItemSelected(String.valueOf(record.getId()));
+                }
             }
-            addTask_ = null;
-            progress_.dismiss();
+        }
+    }
+
+    public void OnException(SQLException exception) {
+        Log.e("EDIT", exception.toString());
+        Common.DisplayException(getActivity(),
+                getString(R.string.error_saving_item_title),
+                exception);
+        if (!twoPane_) {
+            getActivity().setResult(Activity.RESULT_CANCELED);
+        }
+    }
+
+    public void OnCancelled() {
+        progress_.dismiss();
+    }
+
+    private void addRecord() {
+        if (existingRecord_ != null) {
+            existingRecord_.setUsername(username_);
+            existingRecord_.setDomain(domain_);
+            existingRecord_.setPassword(password_);
+            existingRecord_.setRemarks(remarks_);
+            SQLCipherDatabase.updateRecord(existingRecord_, this);
+        } else {
+            SQLCipherDatabase.createRecord(
+                    username_, domain_, password_, remarks_, this);
         }
     }
 }

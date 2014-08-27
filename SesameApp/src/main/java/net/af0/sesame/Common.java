@@ -176,41 +176,4 @@ class Common {
                 .setNeutralButton(ctx.getString(R.string.dismiss), null)
                 .create().show();
     }
-
-    /**
-     * An object implementing this must be passed to LoadRecordFromDatabase, to give a callback to
-     * pass the loaded record to upon completion.
-     */
-    static interface DatabaseLoadCallbacks {
-        void OnLoadRecord(SQLCipherDatabase.Record record);
-    }
-
-    /**
-     * Load an item from the database in an AsyncTask and call callbacks.OnRecordLoad() when done.
-     * Null will be passed to callbacks.OnLoadRecord if no record is found.
-     * @param id
-     * @param callbacks
-     */
-    static void LoadRecordFromDatabase(final long id, final DatabaseLoadCallbacks callbacks) {
-        AsyncTask<Void, Void, Boolean> loadItemTask =
-                new AsyncTask<Void, Void, Boolean>(){
-                    SQLCipherDatabase.Record item;
-                    @Override
-                    public Boolean doInBackground(Void... param) {
-                        item = SQLCipherDatabase.getRecord(id);
-                        return item != null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(final Boolean success) {
-                        callbacks.OnLoadRecord(item);
-                    }
-
-                    @Override
-                    protected void onCancelled() {
-                        callbacks.OnLoadRecord(null);
-                    }
-                };
-        loadItemTask.execute();
-    }
 }

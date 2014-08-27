@@ -277,6 +277,7 @@ public final class ItemListActivity extends FragmentActivity
     @Override
     public void onItemSelected(String id) {
         if (id == null) {
+            selectedId_ = -1;
             // Clear the fragment.
             if (twoPane_) {
                 getSupportFragmentManager().beginTransaction().remove(
@@ -284,11 +285,7 @@ public final class ItemListActivity extends FragmentActivity
             }
             return;
         }
-        selectedId_ = Long.valueOf(id);
-        if (SQLCipherDatabase.getRecord(selectedId_) == null) {
-            // Item was deleted. We should find a more elegant way to do this.
-            return;
-        }
+        selectedId_ = Long.parseLong(id);
         if (twoPane_) {
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a fragment transaction.
