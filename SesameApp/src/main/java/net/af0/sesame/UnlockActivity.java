@@ -40,10 +40,12 @@ public final class UnlockActivity extends Activity {
         // If the database does not yet exist, redirect to the CreateDatabaseActivity.
         if (!SQLCipherDatabase.Exists(this)) {
             startActivity(new Intent(getBaseContext(), CreateDatabaseActivity.class).setFlags(
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |
+                            Intent.FLAG_ACTIVITY_NO_ANIMATION));
         } else if (!SQLCipherDatabase.isLocked()) {
             startActivity(new Intent(getBaseContext(), ItemListActivity.class).setFlags(
-                    Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |
+                            Intent.FLAG_ACTIVITY_NO_ANIMATION));
         }
 
         // Set up the login form.
