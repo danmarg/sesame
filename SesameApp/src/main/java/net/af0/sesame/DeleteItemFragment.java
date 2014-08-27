@@ -5,15 +5,12 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.util.Log;
 
-import net.sqlcipher.SQLException;
-import net.sqlcipher.database.SQLiteException;
-
-public final class DeleteItemFragment extends DialogFragment implements SQLCipherDatabase.Callbacks {
+public final class DeleteItemFragment extends DialogFragment
+        implements SQLCipherDatabase.Callbacks2<Boolean, SQLCipherDatabase.Record> {
     private ProgressDialog progress_;
     private ItemListActivity listActivity_;
     private ItemDetailActivity detailActivity_;
@@ -83,12 +80,8 @@ public final class DeleteItemFragment extends DialogFragment implements SQLCiphe
         SQLCipherDatabase.deleteRecord(itemId_, this);
     }
 
-    public void OnLoadRecord(SQLCipherDatabase.Record r) {
-        throw new UnsupportedOperationException("OnLoadRecord");
-    }
-
-    public void OnSaveRecord(boolean success, SQLCipherDatabase.Record r) {
-        progress_.dismiss();
+    public void OnFinish(Boolean success, SQLCipherDatabase.Record r) {
+        dismissProgress();
         if (listActivity_ != null) {
             listActivity_.refreshListFromDatabase();
             listActivity_.onItemSelected(null);
@@ -98,8 +91,8 @@ public final class DeleteItemFragment extends DialogFragment implements SQLCiphe
         }
     }
 
-    public void OnException(SQLException exception) {
-        progress_.dismiss();
+    public void OnException(Exception exception) {
+        dismissProgress();
         Log.e("DELETE", exception.toString());
         Common.DisplayException(getActivity(),
                 getString(R.string.error_deleting_item_title),
@@ -107,6 +100,13 @@ public final class DeleteItemFragment extends DialogFragment implements SQLCiphe
     }
 
     public void OnCancelled() {
-        progress_.dismiss();
+        dismissProgress();
+    }
+
+    private void dismissProgress() {
+        if (progress_ != null) {
+            progress_.dismiss();
+            progress_ = null;
+        }
     }
 }

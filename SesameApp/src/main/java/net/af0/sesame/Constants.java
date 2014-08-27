@@ -93,4 +93,8 @@ class Constants {
      * Single-shot key for Edit Item showcase view.
      */
     static final int SINGLE_SHOT_EDIT_ITEM = 2;
+    /**
+     * How long to wait synchronously on database inserts during database import.
+     */
+    static final int INSERT_DATABASE_TIMEOUT_SECS = 20;
 }

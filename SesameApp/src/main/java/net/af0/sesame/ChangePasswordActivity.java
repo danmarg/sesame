@@ -3,7 +3,6 @@ package net.af0.sesame;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -14,13 +13,10 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import net.sqlcipher.database.SQLiteException;
-
-public final class ChangePasswordActivity extends Activity {
+public final class ChangePasswordActivity extends Activity
+        implements SQLCipherDatabase.Callbacks<Boolean> {
     // Show a progress spinner when we change the password in the background
     private ProgressDialog progress_;
-    // Async task for database creation
-    private ChangePasswordTask changeTask_ = null;
     // Password value
     private String password_;
     // UI references
@@ -97,11 +93,6 @@ public final class ChangePasswordActivity extends Activity {
      * Common code to handle starting the password change.
      */
     private void changePassword() {
-        if (changeTask_ != null) {
-            // Task is already running
-            return;
-        }
-
         // Clear errors
         passwordView_.setError(null);
         password2View_.setError(null);
@@ -132,55 +123,41 @@ public final class ChangePasswordActivity extends Activity {
         if (cancel) {
             focusView.requestFocus();
         } else {
+            if (progress_ != null) {
+                return;  // Already running
+            }
+
             // Show a progress spinner and begin unlocking in the background.
             progress_ = new ProgressDialog(this);
             progress_.setTitle(R.string.changing_password_progress);
+            progress_.setCancelable(false);
             progress_.show();
-            changeTask_ = new ChangePasswordTask(this);
-            changeTask_.execute((Void) null);
+            SQLCipherDatabase.ChangePassword(password_, this);
         }
     }
 
-    /**
-     * An async task to change the password.
-     */
-    public class ChangePasswordTask extends AsyncTask<Void, Void, Boolean> {
-        private final Activity parent_;
-        private SQLiteException exception;  // Stick any exceptions here
-
-        public ChangePasswordTask(Activity parent) {
-            parent_ = parent;
+    public void OnFinish(Boolean success) {
+        dismissProgress();
+        if (success) {
+            finish();
+            startActivity(new Intent(getBaseContext(), ItemListActivity.class));
         }
+    }
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            try {
-                SQLCipherDatabase.ChangePassword(password_);
-            } catch (SQLiteException e) {
-                Log.w("CHANGE PASSWORD", e);
-                exception = e;
-                return false;
-            }
-            return true;
-        }
+    public void OnException(Exception exception) {
+        Log.w("CHANGE PASSWORD", exception);
+        dismissProgress();
+        Common.DisplayException(this, getString(R.string.action_change_error), exception);
+    }
 
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            changeTask_ = null;
+    public void OnCancelled() {
+        dismissProgress();
+    }
+
+    private void dismissProgress() {
+        if (progress_ != null) {
             progress_.dismiss();
             progress_ = null;
-            if (success) {
-                finish();
-                startActivity(new Intent(getBaseContext(), ItemListActivity.class));
-            } else {
-                Common.DisplayException(parent_, getString(R.string.action_change_error), exception);
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            changeTask_ = null;
-            progress_.dismiss();
         }
     }
 }

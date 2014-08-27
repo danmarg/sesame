@@ -3,7 +3,6 @@ package net.af0.sesame;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.InputType;
@@ -20,9 +19,6 @@ import android.widget.TextView;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
 
-import net.sqlcipher.SQLException;
-import net.sqlcipher.database.SQLiteException;
-
 import java.security.SecureRandom;
 
 /**
@@ -30,20 +26,22 @@ import java.security.SecureRandom;
  * This fragment is either contained in a {@link net.af0.sesame.ItemListActivity} in two-pane mode
  * (on tablets) or a {@link net.af0.sesame.EditItemActivity} on handsets.
  */
-public class EditItemFragment extends Fragment implements SQLCipherDatabase.Callbacks {
+public class EditItemFragment extends Fragment
+        implements SQLCipherDatabase.Callbacks2<Boolean, SQLCipherDatabase.Record>,
+        SQLCipherDatabase.Callbacks<SQLCipherDatabase.Record> {
+    // ShowcaseView for first run.
+    ShowcaseView showcase_;
     // Progress spinner for saving changes
     private ProgressDialog progress_;
     // Whether we're in two-pane mode, which dictates how we complete after adding.
     private boolean twoPane_;
     // ID of the record being edited, if it's not a new one.
     private SQLCipherDatabase.Record existingRecord_;
-
     // Value of fields at time of add
     private String username_;
     private String domain_;
     private String password_;
     private String remarks_;
-
     private View addItemView_;
     private View addItemFormView_;
     private EditText usernameView_;
@@ -51,10 +49,6 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
     private EditText passwordView_;
     private EditText remarksView_;
     private Switch passwordSwitch_;
-
-    // ShowcaseView for first run.
-    ShowcaseView showcase_;
-
     // Used for password generation
     private SecureRandom rand_;
     // Offset into {@link net.af0.sesame.Constants.PASSWORD_CHARS} for which chars to use next.
@@ -79,8 +73,6 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        progress_ = new ProgressDialog(getActivity());
-        progress_.setCancelable(false);
         addItemView_ = inflater.inflate(R.layout.fragment_edit_item, container, false);
         addItemFormView_ = addItemView_.findViewById(R.id.add_item_form);
 
@@ -141,6 +133,8 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
                     focusView.requestFocus();
                 } else {
                     // Show a progress spinner and begin unlocking in the background.
+                    progress_ = new ProgressDialog(getActivity());
+                    progress_.setCancelable(false);
                     progress_.setTitle(R.string.save_progress_saving);
                     progress_.show();
                     addRecord();
@@ -161,6 +155,8 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
 
         // Load an existing item in the background, if specified.
         if (getArguments().containsKey(Constants.ARG_ITEM_ID)) {
+            progress_ = new ProgressDialog(getActivity());
+            progress_.setCancelable(false);
             progress_.setTitle(R.string.progress_loading);
             progress_.show();
             SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID), this);
@@ -221,11 +217,12 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
     /**
      * Callback from async database load.
      *
-     * @param item
+     * @param record
      */
-    public void OnLoadRecord(SQLCipherDatabase.Record item) {
+    public void OnFinish(SQLCipherDatabase.Record record) {
         progress_.dismiss();
-        existingRecord_ = item;
+        progress_ = null;
+        existingRecord_ = record;
         if (existingRecord_ == null) {
             return;
         }
@@ -241,8 +238,13 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
         }
     }
 
-    public void OnSaveRecord(boolean success, SQLCipherDatabase.Record record) {
-        progress_.dismiss();
+    /**
+     * Callback from async database save.
+     *
+     * @param record
+     */
+    public void OnFinish(Boolean success, SQLCipherDatabase.Record record) {
+        dismissProgress();
         if (success) {
             if (!twoPane_) {
                 getActivity().setResult(Activity.RESULT_OK,
@@ -258,8 +260,9 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
         }
     }
 
-    public void OnException(SQLException exception) {
+    public void OnException(Exception exception) {
         Log.e("EDIT", exception.toString());
+        dismissProgress();
         Common.DisplayException(getActivity(),
                 getString(R.string.error_saving_item_title),
                 exception);
@@ -269,7 +272,14 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
     }
 
     public void OnCancelled() {
-        progress_.dismiss();
+        dismissProgress();
+    }
+
+    private void dismissProgress() {
+        if (progress_ != null) {
+            progress_.dismiss();
+            progress_ = null;
+        }
     }
 
     private void addRecord() {
@@ -280,8 +290,7 @@ public class EditItemFragment extends Fragment implements SQLCipherDatabase.Call
             existingRecord_.setRemarks(remarks_);
             SQLCipherDatabase.updateRecord(existingRecord_, this);
         } else {
-            SQLCipherDatabase.createRecord(
-                    username_, domain_, password_, remarks_, this);
+            SQLCipherDatabase.createRecord(username_, domain_, password_, remarks_, this);
         }
     }
 }

@@ -1,6 +1,5 @@
 package net.af0.sesame;
 
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,14 +12,13 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import net.sqlcipher.SQLException;
-
 /**
  * A fragment representing a single Item detail screen.
  * This fragment is either contained in a {@link ItemListActivity} in two-pane mode (on tablets) or
  * a {@link ItemDetailActivity} on handsets.
  */
-public class ItemDetailFragment extends Fragment implements SQLCipherDatabase.Callbacks {
+public class ItemDetailFragment extends Fragment
+        implements SQLCipherDatabase.Callbacks<SQLCipherDatabase.Record> {
     // The item we're showing details for.
     SQLCipherDatabase.Record item_;
     ProgressDialog progress_;
@@ -36,9 +34,6 @@ public class ItemDetailFragment extends Fragment implements SQLCipherDatabase.Ca
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView_ = inflater.inflate(R.layout.fragment_item_detail, container, false);
-
-        progress_ = new ProgressDialog(getActivity());
-        progress_.setCancelable(false);
 
         loadFromDatabase();
 
@@ -65,6 +60,8 @@ public class ItemDetailFragment extends Fragment implements SQLCipherDatabase.Ca
      * Load (or reload) the list from the open database.
      */
     void loadFromDatabase() {
+        progress_ = new ProgressDialog(getActivity());
+        progress_.setCancelable(false);
         progress_.setTitle(R.string.progress_loading);
         progress_.show();
         SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID, -1), this);
@@ -75,7 +72,7 @@ public class ItemDetailFragment extends Fragment implements SQLCipherDatabase.Ca
      *
      * @param item
      */
-    public void OnLoadRecord(SQLCipherDatabase.Record item) {
+    public void OnFinish(SQLCipherDatabase.Record item) {
         progress_.dismiss();
         item_ = item;
         if (item_ == null) {
@@ -124,11 +121,7 @@ public class ItemDetailFragment extends Fragment implements SQLCipherDatabase.Ca
         progress_.dismiss();
     }
 
-    public void OnSaveRecord(boolean result, SQLCipherDatabase.Record record) {
-        throw new UnsupportedOperationException("OnSaveRecord");
-    }
-
-    public void OnException(SQLException exception) {
+    public void OnException(Exception exception) {
         Log.e("DETAIL", exception.toString());
     }
 }

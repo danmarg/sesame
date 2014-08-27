@@ -3,7 +3,6 @@ package net.af0.sesame;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -14,16 +13,13 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import net.sqlcipher.database.SQLiteException;
-
 /**
  * Create a new database.
  */
-public final class CreateDatabaseActivity extends Activity {
+public final class CreateDatabaseActivity extends Activity
+        implements SQLCipherDatabase.Callbacks<Boolean> {
     // Progress spinner for background task of creating database
     private ProgressDialog progress_;
-    // Async task for database creation
-    private DatabaseCreationTask creationTask_ = null;
     // Password value
     private char[] password_;
     // UI references
@@ -61,10 +57,9 @@ public final class CreateDatabaseActivity extends Activity {
      * Handle actual database creation. Validate passwords, and start a background task.
      */
     private void createDatabase() {
-        if (creationTask_ != null) {
-            return;
+        if (progress_ != null) {
+            return;  // Already running
         }
-
         // Clear errors
         passwordView_.setError(null);
         password2View_.setError(null);
@@ -115,8 +110,7 @@ public final class CreateDatabaseActivity extends Activity {
             progress_ = new ProgressDialog(this);
             progress_.setTitle(R.string.creating_database_progress);
             progress_.show();
-            creationTask_ = new DatabaseCreationTask();
-            creationTask_.execute((Void) null);
+            SQLCipherDatabase.CreateDatabase(getBaseContext(), password_, this);
         }
     }
 
@@ -161,46 +155,28 @@ public final class CreateDatabaseActivity extends Activity {
         super.onResume();
     }
 
-    /**
-     * An async database creation task.
-     */
-    public class DatabaseCreationTask extends AsyncTask<Void, Void, Boolean> {
-        private SQLiteException exception;
-
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            try {
-                SQLCipherDatabase.CreateDatabase(getBaseContext(), password_);
-            } catch (SQLiteException e) {
-                exception = e;
-                return false;
-            } finally {
-                for (int i = 0; i < password_.length; i++) {
-                    password_[i] = 0;
-                }
-            }
-            return true;
-        }
-
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            creationTask_ = null;
-            progress_.dismiss();
-            progress_ = null;
-            if (success) {
-                finish();
-                startActivity(new Intent(getBaseContext(), ItemListActivity.class));
-            } else {
-                Log.e("CREATE", exception.toString());
-                Common.DisplayException(getParent(), getString(R.string.error_creating_database), exception);
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            creationTask_ = null;
-            progress_.dismiss();
+    public void OnFinish(Boolean success) {
+        dismissProgress();
+        if (success) {
+            finish();
+            startActivity(new Intent(getBaseContext(), ItemListActivity.class));
         }
     }
 
+    public void OnException(Exception exception) {
+        dismissProgress();
+        Log.e("CREATE", exception.toString());
+        Common.DisplayException(getParent(), getString(R.string.error_creating_database), exception);
+    }
+
+    public void OnCancelled() {
+        dismissProgress();
+    }
+
+    private void dismissProgress() {
+        if (progress_ != null) {
+            progress_.dismiss();
+            progress_ = null;
+        }
+    }
 }

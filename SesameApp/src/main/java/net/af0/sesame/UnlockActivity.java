@@ -3,7 +3,6 @@ package net.af0.sesame;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -14,16 +13,11 @@ import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import net.sqlcipher.database.SQLiteException;
-
 /**
  * This is the first activity the user sees when opening the app. It allows unlocking the database
  * (or forwards the user to the CreateDatabaseActivity if none exists).
  */
-public final class UnlockActivity extends Activity {
-    // Async task for database unlocking
-    private UnlockTask unlockTask_ = null;
-
+public final class UnlockActivity extends Activity implements SQLCipherDatabase.Callbacks<Boolean> {
     // Value of password at the time of the login attempt
     private char[] password_;
 
@@ -113,7 +107,7 @@ public final class UnlockActivity extends Activity {
         }
 
         // Lock (if we're coming from the "lock" button.
-        if (!SQLCipherDatabase.isLocked() && unlockTask_ == null) {
+        if (!SQLCipherDatabase.isLocked()) {
             SQLCipherDatabase.Lock();
         }
 
@@ -124,10 +118,9 @@ public final class UnlockActivity extends Activity {
      * Retrieve the password set in the UI and attempt to unlock the database in a background task.
      */
     void attemptUnlock() {
-        if (unlockTask_ != null) {
-            return;
+        if (progress_ != null) {
+            return;  // Already running
         }
-
         // Reset errors.
         passwordView_.setError(null);
 
@@ -153,51 +146,36 @@ public final class UnlockActivity extends Activity {
             progress_ = new ProgressDialog(this);
             progress_.setTitle(R.string.unlock_progress_unlocking);
             progress_.show();
-            unlockTask_ = new UnlockTask();
-            unlockTask_.execute((Void) null);
+            SQLCipherDatabase.OpenDatabase(getBaseContext(), password_, this);
         }
     }
 
-    /**
-     * Represents an asynchronous database unlock.
-     */
-    public class UnlockTask extends AsyncTask<Void, Void, Boolean> {
-        private SQLiteException exception;
+    public void OnException(Exception exception) {
+        Log.w("Unlocking database", exception.toString());
+        dismissProgress();
+        passwordView_.setError(getString(R.string.error_incorrect_password));
+        passwordView_.requestFocus();
+    }
 
-        @Override
-        protected Boolean doInBackground(Void... params) {
-            try {
-                SQLCipherDatabase.OpenDatabase(getBaseContext(), password_);
-            } catch (SQLiteException e) {
-                exception = e;
-                return false;
-            } finally {
-                for (int i = 0; i < password_.length; i++) {
-                    password_[i] = 0;
-                }
-            }
-            return true;
+    public void OnFinish(Boolean success) {
+        dismissProgress();
+        if (success) {
+            // Don't finish() here--we want the "lock" button to take us back here in the stack.
+            startActivity(new Intent(getBaseContext(), ItemListActivity.class));
         }
+    }
 
-        @Override
-        protected void onPostExecute(final Boolean success) {
-            unlockTask_ = null;
+    public void OnCancelled() {
+        dismissProgress();
+    }
+
+    private void dismissProgress() {
+        if (progress_ != null) {
             progress_.dismiss();
             progress_ = null;
-            if (success) {
-                // Don't finish() here--we want the "lock" button to take us back here in the stack.
-                startActivity(new Intent(getBaseContext(), ItemListActivity.class));
-            } else {
-                Log.w("Unlocking database", exception.toString());
-                passwordView_.setError(getString(R.string.error_incorrect_password));
-                passwordView_.requestFocus();
-            }
         }
-
-        @Override
-        protected void onCancelled() {
-            unlockTask_ = null;
-            progress_.dismiss();
+        for (int i = 0; i < password_.length; i++) {
+            password_[i] = 0;
         }
     }
 }

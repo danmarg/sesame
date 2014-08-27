@@ -7,19 +7,15 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.support.v4.content.FileProvider;
 import android.text.InputType;
 import android.util.Log;
 import android.widget.EditText;
 
-import net.sqlcipher.database.SQLiteException;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -30,7 +26,9 @@ class Common {
     /**
      * Export the keys database. The user chooses what to do with it.
      */
-    static boolean ExportKeys(Context ctx) {
+    static boolean ExportKeys(final Context ctx) {
+        final ProgressDialog progress = new ProgressDialog(ctx);
+        progress.setTitle(R.string.progress_loading);
         // First, copy the database to a temporary file.
         File dst;
         try {
@@ -40,7 +38,25 @@ class Common {
             );
             dst = new File(ctx.getCacheDir(), exportName);
             FileOutputStream dstStr = new FileOutputStream(dst);
-            SQLCipherDatabase.ExportDatabase(ctx, dstStr);
+            SQLCipherDatabase.Callbacks<Boolean> callbacks = new
+                    SQLCipherDatabase.Callbacks<Boolean>() {
+                        @Override
+                        public void OnFinish(Boolean success) {
+                        }
+
+                        @Override
+                        public void OnException(Exception exception) {
+                            progress.dismiss();
+                            Log.w("Importing database", exception.toString());
+                            DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title),
+                                    exception);
+                        }
+
+                        @Override
+                        public void OnCancelled() {
+                        }
+                    };
+            SQLCipherDatabase.ExportDatabase(ctx, dstStr, callbacks);
         } catch (java.io.IOException e) {
             Log.e("EXPORT", e.toString());
             DisplayException(ctx, ctx.getString(R.string.export_keys_failure_title), e);
@@ -68,28 +84,18 @@ class Common {
         // This is the URI of the imported data.
         final Uri uri = data.getData();
         final InputStream src;
-        final OutputStream os;
-        // The file to cache the imported data in while we parse it.
-        final File dst;
         try {
             src = ctx.getContentResolver().openInputStream(uri);
-            dst = File.createTempFile(Constants.KEY_IMPORT_TMPNAME, Constants.KEY_IMPORT_SUFFIX,
-                    ctx.getCacheDir());
-            os = new FileOutputStream(dst, false);
-            int l;
-            byte[] buf = new byte[1024];
-            while ((l = src.read(buf)) != -1) {
-                os.write(buf, 0, l);
-            }
-        } catch (IOException e) {
-            Log.e("IMPORT", e.toString());
-            DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title), e);
+        } catch (IOException exception) {
+            Log.w("Importing database", exception.toString());
+            DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title),
+                    exception);
             return;
         }
 
         // Set up a progress spinner for while we unlock and import, since that takes a while.
         final ProgressDialog progress = new ProgressDialog(ctx);
-        progress.setTitle(R.string.unlock_progress_unlocking);
+        progress.setTitle(R.string.progress_loading);
         // Build a dialog for the password prompt.
         final EditText passwordText = new EditText(ctx);
         passwordText.setInputType(InputType.TYPE_CLASS_TEXT |
@@ -105,44 +111,33 @@ class Common {
                 passwordText.getText().getChars(0, password.length, password, 0);
                 // Show the dialog spinner.
                 progress.show();
-                AsyncTask<Void, Void, Boolean> importTask = new AsyncTask<Void, Void, Boolean>() {
-                    Exception exception;
-
-                    @Override
-                    protected Boolean doInBackground(Void... params) {
-                        boolean success = false;
-                        try {
-                            SQLCipherDatabase.ImportDatabase(ctx, dst.getAbsolutePath(), password);
-                            success = true;
-                        } catch (SQLiteException e) {
-                            Log.e("IMPORT", e.toString());
-                            exception = e;
-                        } catch (IOException e) {
-                            Log.e("IMPORT", e.toString());
-                            exception = e;
-                        }
-                        return success;
-                    }
-
-                    @Override
-                    protected void onPostExecute(final Boolean success) {
-                        progress.dismiss();
-                        if (success) {
-                            if (importCallback != null) {
-                                importCallback.run();
+                SQLCipherDatabase.Callbacks<Boolean> callbacks = new
+                        SQLCipherDatabase.Callbacks<Boolean>() {
+                            @Override
+                            public void OnFinish(Boolean success) {
+                                progress.dismiss();
+                                if (importCallback != null) {
+                                    importCallback.run();
+                                }
                             }
-                        } else {
-                            Log.w("Importing database", exception.toString());
-                            DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title),
-                                    exception);
-                        }
-                    }
 
-                    @Override
-                    protected void onCancelled() {
-                    }
-                };
-                importTask.execute();
+                            @Override
+                            public void OnException(Exception exception) {
+                                progress.dismiss();
+                                Log.w("Importing database", exception.toString());
+                                DisplayException(ctx, ctx.getString(R.string.import_keys_failure_title),
+                                        exception);
+                            }
+
+                            @Override
+                            public void OnCancelled() {
+                                progress.dismiss();
+                                if (importCallback != null) {
+                                    importCallback.run();
+                                }
+                            }
+                        };
+                SQLCipherDatabase.ImportDatabase(ctx, src, password, callbacks);
             }
         });
         alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -176,4 +171,5 @@ class Common {
                 .setNeutralButton(ctx.getString(R.string.dismiss), null)
                 .create().show();
     }
+
 }

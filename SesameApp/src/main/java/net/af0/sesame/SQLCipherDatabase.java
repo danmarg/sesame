@@ -12,16 +12,16 @@ import android.util.Log;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import net.sqlcipher.Cursor;
-import net.sqlcipher.SQLException;
 import net.sqlcipher.database.SQLiteDatabase;
 import net.sqlcipher.database.SQLiteDatabaseHook;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Singleton class wrapping the database interactions.
@@ -51,24 +51,13 @@ public final class SQLCipherDatabase {
     private static net.sqlcipher.database.SQLiteOpenHelper helper_;
     private static SQLiteDatabase database_;
 
-
-    /**
-     * An object implementing this must be passed to getRecord or createRecord, to give a callback
-     * to pass the resulting record to upon completion.
-     */
-    static interface Callbacks {
-        void OnLoadRecord(Record record);
-        void OnException(SQLException exception);
-        void OnSaveRecord(boolean success, Record record);
-        void OnCancelled();
-    }
-
     public static void createRecord(final String username, final String domain,
                                       final String password, final String remarks,
-                                      final Callbacks callbacks) {
+                                      final Callbacks<Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>(){
             Record r;
-            SQLException exception;
+            Exception exception;
+
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
@@ -84,7 +73,7 @@ public final class SQLCipherDatabase {
                     r = toRecord(crs);
                     crs.close();
                     return r != null;
-                } catch(SQLException e) {
+                } catch (Exception e) {
                     exception = e;
                     return false;
                 }
@@ -96,7 +85,7 @@ public final class SQLCipherDatabase {
                     if (exception != null) {
                         callbacks.OnException(exception);
                     } else {
-                        callbacks.OnLoadRecord(r);
+                        callbacks.OnFinish(r);
                     }
                 }
             }
@@ -109,18 +98,29 @@ public final class SQLCipherDatabase {
         }.execute();
     }
 
-    public static void deleteRecord(final long record_id, final Callbacks callbacks) {
+    public static void deleteRecord(final long record_id,
+                                    final Callbacks2<Boolean, Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
+            Exception exception;
+
             @Override
             protected Boolean doInBackground(Void... params) {
-                database_.delete(TABLE_KEYS, COLUMN_ID + "=" + record_id, null);
+                try {
+                    database_.delete(TABLE_KEYS, COLUMN_ID + "=" + record_id, null);
+                } catch (Exception e) {
+                    exception = e;
+                }
                 return true;
             }
 
             @Override
             protected void onPostExecute(final Boolean result) {
                 if (callbacks != null) {
-                    callbacks.OnSaveRecord(result, null);
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnFinish(result, null);
+                    }
                 }
             }
             @Override
@@ -132,9 +132,10 @@ public final class SQLCipherDatabase {
         }.execute();
     }
 
-    public static void updateRecord(final Record r, final Callbacks callbacks) {
+    public static void updateRecord(final Record r, final Callbacks2<Boolean, Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
-            SQLException exception;
+            Exception exception;
+
             @Override
             protected Boolean doInBackground(Void... params) {
                 ContentValues values = new ContentValues();
@@ -144,7 +145,7 @@ public final class SQLCipherDatabase {
                 values.put(COLUMN_REMARKS, r.getRemarks());
                 try {
                     database_.update(TABLE_KEYS, values, COLUMN_ID + "=" + r.getId(), null);
-                } catch (SQLException e) {
+                } catch (Exception e) {
                     exception = e;
                 }
                 return true;
@@ -156,7 +157,7 @@ public final class SQLCipherDatabase {
                     if (exception != null) {
                         callbacks.OnException(exception);
                     } else {
-                        callbacks.OnSaveRecord(result, r);
+                        callbacks.OnFinish(result, r);
                     }
                 }
             }
@@ -169,32 +170,42 @@ public final class SQLCipherDatabase {
         }.execute();
     }
 
-    public static void getRecord(final long record_id,  final Callbacks callbacks) {
+    public static void getRecord(final long record_id, final Callbacks<Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>(){
             Record r;
+            Exception exception;
+
             @Override
             public Boolean doInBackground(Void... param) {
-                Cursor crs = database_.query(TABLE_KEYS, allColumns_,
-                        COLUMN_ID + "=" + record_id,
-                        null, null, null, null);
-                if (crs.getCount() == 0) {
+                try {
+                    Cursor crs = database_.query(TABLE_KEYS, allColumns_,
+                            COLUMN_ID + "=" + record_id,
+                            null, null, null, null);
+                    if (crs.getCount() == 0) {
+                        crs.close();
+                        return false;
+                    }
+                    crs.moveToFirst();
+                    r = toRecord(crs);
                     crs.close();
-                    return false;
+                } catch (Exception e) {
+                    exception = e;
                 }
-                crs.moveToFirst();
-                r = toRecord(crs);
-                crs.close();
                 return r != null;
             }
 
             @Override
             protected void onPostExecute(final Boolean success) {
-                callbacks.OnLoadRecord(r);
+                callbacks.OnFinish(r);
             }
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
-                    callbacks.OnCancelled();
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnCancelled();
+                    }
                 }
             }
         }.execute();
@@ -240,19 +251,51 @@ public final class SQLCipherDatabase {
                                     Base64.DEFAULT
                             ))
                     ).build();
-        } catch (InvalidProtocolBufferException ex) {
-            Log.e("IMPORT", ex.toString());
+        } catch (InvalidProtocolBufferException e) {
+            Log.e("IMPORT", Log.getStackTraceString(e));
             // Go with defaults anyway. Uh oh...
         }
         return metadata;
     }
 
-    public static synchronized void OpenDatabase(Context ctx, char[] password) {
-        if (helper_ == null) {
-            SQLiteDatabase.loadLibs(ctx);
-            helper_ = new OpenHelper(ctx, getMetadataFromPrefs(ctx));
-        }
-        database_ = helper_.getWritableDatabase(password);
+    public static synchronized void OpenDatabase(final Context ctx, final char[] password,
+                                                 final Callbacks<Boolean> callbacks) {
+        new AsyncTask<Void, Void, Boolean>() {
+            Exception exception;
+
+            @Override
+            public Boolean doInBackground(Void... param) {
+                try {
+                    if (helper_ == null) {
+                        SQLiteDatabase.loadLibs(ctx);
+                        helper_ = new OpenHelper(ctx, getMetadataFromPrefs(ctx));
+                    }
+                    database_ = helper_.getWritableDatabase(password);
+                } catch (Exception e) {
+                    exception = e;
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(final Boolean success) {
+                if (callbacks != null) {
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnFinish(success);
+                    }
+                }
+            }
+
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
     }
 
     // The import/export format for the database is
@@ -260,69 +303,152 @@ public final class SQLCipherDatabase {
     //            varint). Parse with parseDelimitedFrom().
     //      rest: SQLCipher DB
     // So we have to strip the first n bytes before passing the file off to SQLCipher.
-    public static void ImportDatabase(Context ctx, String path, char[] password)
-            throws IOException {
-        if (isLocked()) {
-            throw new SQLiteException("Database must be unlocked");
-        }
-        // Get temporary path to write database minus metadata to.
-        File tmpDb = File.createTempFile(Constants.KEY_IMPORT_TMPNAME, Constants.KEY_IMPORT_SUFFIX,
-                ctx.getCacheDir());
-        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder()
-                .setVersion(DATABASE_VERSION)
-                .setKdfIter(Constants.KDF_ITER)
-                .build();
-        OutputStream tmpDbStr = new FileOutputStream(tmpDb);
-        InputStream rawInput = new FileInputStream(path);
-        try {
-            // Parse the DatabaseMetadata.
-            metadata = DatabaseMetadata.Database.parseDelimitedFrom(rawInput);
-            // Now get the remaining buffer.
-            byte[] buf = new byte[1024];
-            int b;
-            while ((b = rawInput.read(buf)) != -1) {
-                tmpDbStr.write(buf, 0, b);
-            }
-        } finally {
-            tmpDbStr.close();
-        }
-        // Now everything is hunky dory.
-        SQLiteDatabase imported = SQLiteDatabase.openDatabase(tmpDb.getPath(), password, null,
-                SQLiteDatabase.OPEN_READONLY, new DatabaseHook(metadata));
-        if (imported.getVersion() != DATABASE_VERSION) {
-            // Because we're not using OpenHelper here, we have to handle version mismatches
-            // ourselves. For now, versioning is unsupported!
-            throw new UnsupportedOperationException("Upgrade not supported!");
+    public static void ImportDatabase(final Context ctx, final InputStream input,
+                                      final char[] password, final Callbacks<Boolean> callbacks) {
+        new AsyncTask<Void, Void, Boolean>() {
+            Exception exception;
+            // Block on all the database insertions being successful.
+            Semaphore inserts = new Semaphore(0);
+            int nInserts = 0;
 
-        }
-        Cursor crs = imported.query(TABLE_KEYS, allColumns_, null, null, null, null,
-                null);
-        for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
-            Record r = toRecord(crs);
-            createRecord(r.getUsername(), r.getDomain(), r.getPassword(), r.getRemarks(), null);
-        }
-        crs.close();
+            @Override
+            public Boolean doInBackground(Void... param) {
+                try {
+                    if (isLocked()) {
+                        throw new SQLiteException("Database must be unlocked");
+                    }
+                    // Get temporary path to write database minus metadata to.
+                    File tmpDb = File.createTempFile(Constants.KEY_IMPORT_TMPNAME,
+                            Constants.KEY_IMPORT_SUFFIX, ctx.getCacheDir());
+                    DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder()
+                            .setVersion(DATABASE_VERSION)
+                            .setKdfIter(Constants.KDF_ITER)
+                            .build();
+                    OutputStream tmpDbStr = new FileOutputStream(tmpDb);
+                    try {
+                        // Parse the DatabaseMetadata.
+                        metadata = DatabaseMetadata.Database.parseDelimitedFrom(input);
+                        // Now get the remaining buffer.
+                        byte[] buf = new byte[1024];
+                        int b;
+                        while ((b = input.read(buf)) != -1) {
+                            tmpDbStr.write(buf, 0, b);
+                        }
+                    } finally {
+                        tmpDbStr.close();
+                    }
+                    // Now everything is hunky dory.
+                    SQLiteDatabase imported = SQLiteDatabase.openDatabase(tmpDb.getPath(), password,
+                            null, SQLiteDatabase.OPEN_READONLY, new DatabaseHook(metadata));
+                    if (imported.getVersion() != DATABASE_VERSION) {
+                        // Because we're not using OpenHelper here, we have to handle version
+                        // mismatches ourselves. For now, versioning is unsupported!
+                        throw new UnsupportedOperationException("Upgrade not supported!");
+
+                    }
+                    Cursor crs = imported.query(TABLE_KEYS, allColumns_, null, null, null, null,
+                            null);
+                    for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
+                        Record r = toRecord(crs);
+                        Callbacks<Record> cb = new Callbacks<Record>() {
+                            @Override
+                            public void OnFinish(Record x) {
+                                inserts.release();
+                            }
+
+                            @Override
+                            public void OnException(Exception exception) {
+                            }
+
+                            @Override
+                            public void OnCancelled() {
+                            }
+                        };
+                        nInserts++;
+                        createRecord(r.getUsername(), r.getDomain(), r.getPassword(),
+                                r.getRemarks(), cb);
+                    }
+                    crs.close();
+                    try {
+                        inserts.tryAcquire(nInserts, Constants.INSERT_DATABASE_TIMEOUT_SECS,
+                                TimeUnit.SECONDS);
+                    } catch (InterruptedException e) {
+                    }
+                    return true;
+                } catch (Exception e) {
+                    exception = e;
+                    return false;
+                }
+            }
+
+            @Override
+            protected void onPostExecute(final Boolean success) {
+                if (callbacks != null) {
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnFinish(success);
+                    }
+                }
+            }
+
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
     }
 
-    public static void ExportDatabase(Context ctx, OutputStream output) throws IOException {
-        getMetadataFromPrefs(ctx).writeDelimitedTo(output);
-        InputStream rawInput = new FileInputStream(getDatabaseFilePath(ctx));
-        byte[] buf = new byte[1024];
-        int b;
-        BeginTransaction();
-        try {
-            while ((b = rawInput.read(buf)) != -1) {
-                output.write(buf, 0, b);
+    public static void ExportDatabase(final Context ctx, final OutputStream output,
+                                      final Callbacks<Boolean> callbacks) {
+        new AsyncTask<Void, Void, Boolean>() {
+            Exception exception;
+
+            @Override
+            public Boolean doInBackground(Void... param) {
+                try {
+                    getMetadataFromPrefs(ctx).writeDelimitedTo(output);
+                    InputStream rawInput = new FileInputStream(getDatabaseFilePath(ctx));
+                    byte[] buf = new byte[1024];
+                    int b;
+                    BeginTransaction();
+                    while ((b = rawInput.read(buf)) != -1) {
+                        output.write(buf, 0, b);
+                    }
+                    rawInput.close();
+                } catch (Exception e) {
+                    exception = e;
+                } finally {
+                    EndTransaction();
+                }
+                return true;
             }
-        } finally {
-            rawInput.close();
-            EndTransaction();
-        }
+
+            @Override
+            protected void onPostExecute(final Boolean success) {
+                if (callbacks != null) {
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnFinish(success);
+                    }
+                }
+            }
+
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
     }
 
-    public static void CreateDatabase(Context ctx, char[] password) {
+    public static void CreateDatabase(Context ctx, char[] password, Callbacks<Boolean> callbacks) {
         if (Exists(ctx)) {
-            throw new SQLiteException("file already exists");
+            callbacks.OnException(new SQLiteException("file already exists"));
         }
         // Store a DatabaseMetadata object with our creation defaults.
         DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder().setVersion(
@@ -333,17 +459,81 @@ public final class SQLCipherDatabase {
                 Base64.encodeToString(metadata.toByteArray(), Base64.DEFAULT));
         preferencesEditor.commit();
         // Open normally.
-        OpenDatabase(ctx, password);
+        OpenDatabase(ctx, password, callbacks);
     }
 
-    public static synchronized void DeleteDatabase(Context ctx) {
-        Lock();  // Throw away the open database handle.
-        ctx.deleteDatabase(DATABASE_NAME);
+    public static synchronized void DeleteDatabase(final Context ctx,
+                                                   final Callbacks<Boolean> callbacks) {
+        new AsyncTask<Void, Void, Boolean>() {
+            Exception exception;
+
+            @Override
+            public Boolean doInBackground(Void... param) {
+                try {
+                    Lock();  // Throw away the open database handle.
+                    ctx.deleteDatabase(DATABASE_NAME);
+                } catch (Exception e) {
+                    exception = e;
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(final Boolean success) {
+                if (callbacks != null) {
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnFinish(success);
+                    }
+                }
+            }
+
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
     }
 
-    public static void ChangePassword(String password) {
-        // TODO: Switch this from a String to a char[] and just manually escape.
-        database_.rawExecSQL("PRAGMA rekey = " + DatabaseUtils.sqlEscapeString(password) + ";");
+    public static void ChangePassword(final String password, final Callbacks<Boolean> callbacks) {
+        new AsyncTask<Void, Void, Boolean>() {
+            Exception exception;
+
+            @Override
+            public Boolean doInBackground(Void... param) {
+                try {
+                    // TODO: Switch this from a String to a char[] and just manually escape.
+                    database_.rawExecSQL("PRAGMA rekey = " + DatabaseUtils.sqlEscapeString(password)
+                            + ";");
+                } catch (Exception e) {
+                    exception = e;
+                    return false;
+                }
+                return true;
+            }
+
+            @Override
+            protected void onPostExecute(final Boolean success) {
+                if (callbacks != null) {
+                    if (exception != null) {
+                        callbacks.OnException(exception);
+                    } else {
+                        callbacks.OnFinish(success);
+                    }
+                }
+            }
+
+            @Override
+            protected void onCancelled() {
+                if (callbacks != null) {
+                    callbacks.OnCancelled();
+                }
+            }
+        }.execute();
     }
 
     public static synchronized boolean isLocked() {
@@ -379,6 +569,23 @@ public final class SQLCipherDatabase {
         if (!isLocked()) {
             database_.endTransaction();
         }
+    }
+
+
+    static interface Callbacks<T> {
+        void OnFinish(T x);
+
+        void OnException(Exception exception);
+
+        void OnCancelled();
+    }
+
+    static interface Callbacks2<T1, T2> {
+        void OnFinish(T1 x, T2 y);
+
+        void OnException(Exception exception);
+
+        void OnCancelled();
     }
 
     private static class OpenHelper extends net.sqlcipher.database.SQLiteOpenHelper {

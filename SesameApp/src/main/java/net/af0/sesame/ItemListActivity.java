@@ -22,8 +22,6 @@ import com.github.amlcurran.showcaseview.targets.Target;
 
 import net.sqlcipher.CursorWrapper;
 
-import java.security.KeyRep;
-
 /**
  * An activity representing a list of Items. This activity has different presentations for handset
  * and tablet-size devices. On handsets, the activity presents a list of items, which when touched,
@@ -334,7 +332,7 @@ public final class ItemListActivity extends FragmentActivity
      * Get the record object for the specified offset in the list.
      */
     private long getRecordFromPosition(int position) {
-        return ((CursorWrapper)itemListAdapter_.getItem(position)).getLong(0);
+        return ((CursorWrapper) itemListAdapter_.getItem(position)).getLong(0);
     }
 
     private static class RecordCursorLoader extends CursorLoader {
