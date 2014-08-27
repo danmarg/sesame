@@ -94,6 +94,11 @@ public final class ItemListActivity extends FragmentActivity
                 .singleShot(Constants.SINGLE_SHOT_ITEM_LIST)
                 .build();
 
+        if (twoPane_) {
+            menu.add(0, R.id.action_edit, Menu.NONE, R.string.edit);
+            menu.add(0, R.id.action_delete, Menu.NONE, R.string.delete);
+        }
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -196,6 +201,11 @@ public final class ItemListActivity extends FragmentActivity
                     startActivityForResult(addIntent, ADD_RECORD_REQUEST);
                 }
                 return true;
+            case R.id.action_edit:
+                onEditItem(itemListAdapter_.getCursor().getPosition());
+                return true;
+            case R.id.action_delete:
+                onDeleteItem(itemListAdapter_.getCursor().getPosition());
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -275,15 +285,22 @@ public final class ItemListActivity extends FragmentActivity
     @Override
     public void onItemSelected(String id) {
         if (id == null) {
-            selectedId_ = -1;
-            // Clear the fragment.
-            if (twoPane_) {
-                getSupportFragmentManager().beginTransaction().remove(
-                        getSupportFragmentManager().findFragmentById(R.id.item_detail_container));
+            if (!twoPane_) {
+                selectedId_ = -1;
+                return;
+            } else {  // In two-pane mode, select the 0th rather than leaving an empty pane.
+                if (itemListAdapter_.getCount() == 0) {
+                    // Unless we're empty, in which case show nothing.
+                    getSupportFragmentManager().beginTransaction().remove(
+                            getSupportFragmentManager().findFragmentById(R.id.item_detail_container));
+                    return;
+                } else {
+                    selectedId_ = getRecordFromPosition(0);
+                }
             }
-            return;
+        } else {
+            selectedId_ = Long.parseLong(id);
         }
-        selectedId_ = Long.parseLong(id);
         if (twoPane_) {
             // In two-pane mode, show the detail view in this activity by
             // adding or replacing the detail fragment using a fragment transaction.

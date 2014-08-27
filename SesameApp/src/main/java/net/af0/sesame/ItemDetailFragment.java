@@ -61,8 +61,8 @@ public class ItemDetailFragment extends Fragment
      */
     void loadFromDatabase() {
         progress_ = new ProgressDialog(getActivity());
-        progress_.setCancelable(false);
         progress_.setTitle(R.string.progress_loading);
+        progress_.setCancelable(false);
         progress_.show();
         SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID, -1), this);
     }

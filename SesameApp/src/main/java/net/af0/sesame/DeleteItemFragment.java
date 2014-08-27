@@ -76,6 +76,7 @@ public final class DeleteItemFragment extends DialogFragment
     private void deleteRecord() {
         progress_ = new ProgressDialog(getActivity());
         progress_.setTitle(R.string.delete_progress_deleting);
+        progress_.setCancelable(false);
         progress_.show();
         SQLCipherDatabase.deleteRecord(itemId_, this);
     }

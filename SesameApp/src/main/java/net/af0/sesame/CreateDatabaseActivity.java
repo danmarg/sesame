@@ -109,6 +109,7 @@ public final class CreateDatabaseActivity extends Activity
             // Show a progress spinner and begin creating in the background.
             progress_ = new ProgressDialog(this);
             progress_.setTitle(R.string.creating_database_progress);
+            progress_.setCancelable(false);
             progress_.show();
             SQLCipherDatabase.CreateDatabase(getBaseContext(), password_, this);
         }

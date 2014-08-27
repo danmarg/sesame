@@ -145,6 +145,7 @@ public final class UnlockActivity extends Activity implements SQLCipherDatabase.
             // Show a progress spinner and begin unlocking in the background.
             progress_ = new ProgressDialog(this);
             progress_.setTitle(R.string.unlock_progress_unlocking);
+            progress_.setCancelable(false);
             progress_.show();
             SQLCipherDatabase.OpenDatabase(getBaseContext(), password_, this);
         }
