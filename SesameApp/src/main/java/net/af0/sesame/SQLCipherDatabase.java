@@ -20,8 +20,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Singleton class wrapping the database interactions.
@@ -51,28 +49,33 @@ public final class SQLCipherDatabase {
     private static net.sqlcipher.database.SQLiteOpenHelper helper_;
     private static SQLiteDatabase database_;
 
+    private static Record createRecord(final String username, final String domain,
+                                       final String password, final String remarks) {
+        ContentValues values = new ContentValues();
+        values.put(COLUMN_USERNAME, username);
+        values.put(COLUMN_DOMAIN, domain);
+        values.put(COLUMN_PASSWORD, password);
+        values.put(COLUMN_REMARKS, remarks);
+        long id = database_.insert(TABLE_KEYS, null, values);
+        Cursor crs = database_.query(TABLE_KEYS, allColumns_,
+                COLUMN_ID + "=" + id, null, null, null, null);
+        crs.moveToFirst();
+        Record r = toRecord(crs);
+        crs.close();
+        return r;
+    }
+
     public static void createRecord(final String username, final String domain,
-                                      final String password, final String remarks,
-                                      final Callbacks<Record> callbacks) {
-        AsyncTask<Void, Void, Boolean> task = new AsyncTask<Void, Void, Boolean>(){
+                                    final String password, final String remarks,
+                                    final Callbacks<Record> callbacks) {
+        new AsyncTask<Void, Void, Boolean>() {
             Record r;
             Exception exception;
 
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
-                    ContentValues values = new ContentValues();
-                    values.put(COLUMN_USERNAME, username);
-                    values.put(COLUMN_DOMAIN, domain);
-                    values.put(COLUMN_PASSWORD, password);
-                    values.put(COLUMN_REMARKS, remarks);
-                    long id = database_.insert(TABLE_KEYS, null, values);
-                    Cursor crs = database_.query(TABLE_KEYS, allColumns_,
-                            COLUMN_ID + "=" + id, null, null, null, null);
-                    crs.moveToFirst();
-                    r = toRecord(crs);
-                    crs.close();
-                    return r != null;
+                    return createRecord(username, domain, password, remarks) != null;
                 } catch (Exception e) {
                     exception = e;
                     return false;
@@ -89,26 +92,14 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
+
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
                     callbacks.OnCancelled();
                 }
             }
-        };
-        if (callbacks != null) {
-            task.execute();
-        } else {
-            ContentValues values = new ContentValues();
-            values.put(COLUMN_USERNAME, username);
-            values.put(COLUMN_DOMAIN, domain);
-            values.put(COLUMN_PASSWORD, password);
-            values.put(COLUMN_REMARKS, remarks);
-            long id = database_.insert(TABLE_KEYS, null, values);
-            Cursor crs = database_.query(TABLE_KEYS, allColumns_,
-                    COLUMN_ID + "=" + id, null, null, null, null);
-            crs.close();
-        }
+        }.execute();
     }
 
     public static void deleteRecord(final long record_id,
@@ -136,6 +127,7 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
+
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -174,6 +166,7 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
+
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -184,7 +177,7 @@ public final class SQLCipherDatabase {
     }
 
     public static void getRecord(final long record_id, final Callbacks<Record> callbacks) {
-        new AsyncTask<Void, Void, Boolean>(){
+        new AsyncTask<Void, Void, Boolean>() {
             Record r;
             Exception exception;
 
@@ -211,6 +204,7 @@ public final class SQLCipherDatabase {
             protected void onPostExecute(final Boolean success) {
                 callbacks.OnFinish(r);
             }
+
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -361,7 +355,7 @@ public final class SQLCipherDatabase {
                     for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
                         Record r = toRecord(crs);
                         createRecord(r.getUsername(), r.getDomain(), r.getPassword(),
-                                r.getRemarks(), null);
+                                r.getRemarks());
                     }
                     crs.close();
                     return true;
