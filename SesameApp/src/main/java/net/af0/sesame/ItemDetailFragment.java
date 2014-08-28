@@ -24,11 +24,23 @@ public class ItemDetailFragment extends Fragment
     ProgressDialog progress_;
     private View rootView_;
 
+    // Whether we're in two-pane mode, which dictates whether we update the activity title or not.
+    private boolean twoPane_;
+
     /**
      * Mandatory empty constructor for the fragment manager to instantiate the
      * fragment (e.g. upon screen orientation changes).
      */
     public ItemDetailFragment() { }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (getArguments().containsKey(Constants.ARG_TWO_PANE)) {
+            twoPane_ = getArguments().getBoolean(Constants.ARG_TWO_PANE);
+        }
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -111,8 +123,8 @@ public class ItemDetailFragment extends Fragment
         }
 
         // Set title to the current item's domain, if unset. In two-pane mode the parent activity is
-        // the ItemList, and the title is already set.
-        if (getActivity().getTitle().length() == 0) {
+        // the ItemListActivity, and the title is already set.
+        if (!twoPane_) {
             getActivity().setTitle(item_.getDomain());
         }
     }

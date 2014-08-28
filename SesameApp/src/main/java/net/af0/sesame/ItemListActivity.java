@@ -306,6 +306,7 @@ public final class ItemListActivity extends FragmentActivity
             // adding or replacing the detail fragment using a fragment transaction.
             Bundle arguments = new Bundle();
             arguments.putLong(Constants.ARG_ITEM_ID, selectedId_);
+            arguments.putBoolean(Constants.ARG_TWO_PANE, Boolean.TRUE);
             ItemDetailFragment fragment = new ItemDetailFragment();
             fragment.setArguments(arguments);
             getSupportFragmentManager().beginTransaction()

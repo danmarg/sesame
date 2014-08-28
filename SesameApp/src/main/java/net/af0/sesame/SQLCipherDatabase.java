@@ -75,7 +75,8 @@ public final class SQLCipherDatabase {
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
-                    return createRecord(username, domain, password, remarks) != null;
+                    r = createRecord(username, domain, password, remarks);
+                    return r != null;
                 } catch (Exception e) {
                     exception = e;
                     return false;

@@ -44,7 +44,7 @@
         </activity>
         <activity
             android:name=".UnlockActivity"
-            android:label="@string/title_activity_unlock"
+            android:label="@string/app_name"
             android:windowSoftInputMode="adjustResize|stateVisible">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
