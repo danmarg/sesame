@@ -1,16 +1,23 @@
 package net.af0.sesame;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.text.InputType;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.SearchView;
 import android.widget.SimpleCursorAdapter;
@@ -21,6 +28,9 @@ import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
 import com.github.amlcurran.showcaseview.targets.Target;
 
 import net.sqlcipher.CursorWrapper;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * An activity representing a list of Items. This activity has different presentations for handset
@@ -36,7 +46,7 @@ import net.sqlcipher.CursorWrapper;
  */
 public final class ItemListActivity extends FragmentActivity
         implements ItemListFragment.Callbacks, SearchView.OnQueryTextListener,
-        LoaderManager.LoaderCallbacks<Cursor> {
+        LoaderManager.LoaderCallbacks<Cursor>, SQLCipherDatabase.Callbacks<Boolean> {
 
     private static final int ADD_RECORD_REQUEST = 0;
     private static final int EDIT_RECORD_REQUEST = 1;
@@ -44,16 +54,37 @@ public final class ItemListActivity extends FragmentActivity
     private static final int LOADER_ID = 1;
     // ShowcaseView for first run.
     ShowcaseView showcase_;
-    /**
-     * Whether or not the activity is in two-pane mode, i.e. running on a tablet device.
-     */
+    // Progress spinner for database import.
+    private ProgressDialog progress_;
+
+    // Whether or not the activity is in two-pane mode, i.e. running on a tablet device.
     private boolean twoPane_;
     private long selectedId_;
     private ItemListFragment itemListFragment_;
     private SimpleCursorAdapter itemListAdapter_;
 
     @Override
-    protected void onResume() {
+    public void onPause() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        super.onStop();
+    }
+
+    @Override
+    public void onResume() {
+        if (progress_ != null) {
+            progress_.show();
+        }
+
         // If we're locked, go to the unlock view.
         if (SQLCipherDatabase.isLocked()) {
             startActivity(new Intent(getBaseContext(), UnlockActivity.class).setFlags(
@@ -176,7 +207,7 @@ public final class ItemListActivity extends FragmentActivity
             case R.id.action_export:
                 return Common.ExportKeys(this);
             case R.id.action_import:
-                Common.StartImportKeys(this);
+                startDatabaseImport();
                 return true;
             case R.id.action_settings:
                 startActivity(new Intent(this, SettingsActivity.class));
@@ -230,14 +261,7 @@ public final class ItemListActivity extends FragmentActivity
                 break;
             case Constants.IMPORT_DATABASE_RESULT:
                 if (resultCode == RESULT_OK) {
-                    Common.onImportKeysResult(this, data,
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    refreshListFromDatabase();
-                                }
-                            }
-                    );
+                    finishDatabaseImport(data);
                 }
                 break;
         }
@@ -351,6 +375,77 @@ public final class ItemListActivity extends FragmentActivity
      */
     private long getRecordFromPosition(int position) {
         return ((CursorWrapper) itemListAdapter_.getItem(position)).getLong(0);
+    }
+
+    void startDatabaseImport() {
+        Intent importIntent = new Intent();
+        importIntent.setAction(Intent.ACTION_GET_CONTENT);
+        importIntent.setType(Constants.KEY_IMPORT_MIME);
+        startActivityForResult(importIntent, Constants.IMPORT_DATABASE_RESULT);
+    }
+
+    void finishDatabaseImport(Intent data) {
+        // This is the URI of the imported data.
+        final Uri uri = data.getData();
+        final InputStream src;
+        try {
+            src = getContentResolver().openInputStream(uri);
+        } catch (IOException exception) {
+            Log.w("IMPORT", exception.toString());
+            Common.DisplayException(this, getString(R.string.import_keys_failure_title), exception);
+            return;
+        }
+
+        // Build a dialog for the password prompt.
+        final EditText passwordText = new EditText(this);
+        passwordText.setInputType(InputType.TYPE_CLASS_TEXT |
+                InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+        alert.setTitle(getString(R.string.title_enter_password));
+        alert.setMessage(getString(R.string.import_database_password_message));
+        alert.setView(passwordText);
+        final ItemListActivity ctx = this;
+        alert.setPositiveButton(R.string.action_unlock, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Retrieve the password.
+                final char[] password = new char[passwordText.length()];
+                passwordText.getText().getChars(0, password.length, password, 0);
+                // Set up a progress spinner for while we unlock and import, since that takes a while.
+                progress_ = new ProgressDialog(ctx);
+                progress_.setTitle(R.string.progress_loading);
+                progress_.setCancelable(false);
+                progress_.show();
+                SQLCipherDatabase.ImportDatabase(ctx, src, password, ctx);
+            }
+        });
+        alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Return...
+            }
+        });
+        alert.show();
+    }
+
+    // SQLCipherDatabase.Callbacks
+
+    @Override
+    public void OnFinish(Boolean success) {
+        progress_.dismiss();
+        refreshListFromDatabase();
+    }
+
+    @Override
+    public void OnException(Exception exception) {
+        progress_.dismiss();
+        Log.w("Importing database", exception.toString());
+        Common.DisplayException(this,
+                getString(R.string.import_keys_failure_title), exception);
+    }
+
+    @Override
+    public void OnCancelled() {
+        progress_.dismiss();
+        refreshListFromDatabase();
     }
 
     private static class RecordCursorLoader extends CursorLoader {
