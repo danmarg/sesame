@@ -214,17 +214,17 @@ public class EditItemFragment extends Fragment
     }
 
     /**
-     * Callback from async database load.
+     * Callback from async database load/save.
      *
      * @param record
      */
     public void OnFinish(SQLCipherDatabase.Record record) {
-        progress_.dismiss();
-        progress_ = null;
+        dismissProgress();
         existingRecord_ = record;
         if (existingRecord_ == null) {
             return;
         }
+        existingRecord_ = record;
         usernameView_.setText(existingRecord_.getUsername());
         passwordView_.setText(existingRecord_.getPassword());
         domainView_.setText(existingRecord_.getDomain());

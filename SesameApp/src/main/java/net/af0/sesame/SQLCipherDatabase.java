@@ -67,7 +67,7 @@ public final class SQLCipherDatabase {
 
     public static void createRecord(final String username, final String domain,
                                     final String password, final String remarks,
-                                    final Callbacks<Record> callbacks) {
+                                    final Callbacks2<Boolean, Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Record r;
             Exception exception;
@@ -89,7 +89,7 @@ public final class SQLCipherDatabase {
                     if (exception != null) {
                         callbacks.OnException(exception);
                     } else {
-                        callbacks.OnFinish(r);
+                        callbacks.OnFinish(r != null, r);
                     }
                 }
             }
