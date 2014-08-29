@@ -50,9 +50,10 @@ class Constants {
      * set of characters; upon generation, we will iterate through all possible sets sequentially.
      */
     static final String[] PASSWORD_CHARS = {
-            "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*()-_+=;:'\"[{]}\\|,<.>/?",
-            "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*-_+,.?",
             "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789",
+            "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*-_+,.?",
+            "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*()-_+=;:'\"[{]}\\|,<.>/?",
+
     };
     /**
      * Min length for password generation.
