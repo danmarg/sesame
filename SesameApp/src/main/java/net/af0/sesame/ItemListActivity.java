@@ -426,17 +426,24 @@ public final class ItemListActivity extends FragmentActivity
         alert.show();
     }
 
+    private void dismissProgress() {
+        if (progress_ != null) {
+            progress_.dismiss();
+            progress_ = null;
+        }
+    }
+
     // SQLCipherDatabase.Callbacks
 
     @Override
     public void OnFinish(Boolean success) {
-        progress_.dismiss();
+        dismissProgress();
         refreshListFromDatabase();
     }
 
     @Override
     public void OnException(Exception exception) {
-        progress_.dismiss();
+        dismissProgress();
         Log.w("Importing database", exception.toString());
         Common.DisplayException(this,
                 getString(R.string.import_keys_failure_title), exception);
@@ -444,7 +451,7 @@ public final class ItemListActivity extends FragmentActivity
 
     @Override
     public void OnCancelled() {
-        progress_.dismiss();
+        dismissProgress();
         refreshListFromDatabase();
     }
 
