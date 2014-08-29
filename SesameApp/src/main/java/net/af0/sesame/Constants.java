@@ -53,7 +53,6 @@ class Constants {
             "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789",
             "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*-_+,.?",
             "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789!@#$%^&*()-_+=;:'\"[{]}\\|,<.>/?",
-
     };
     /**
      * Min length for password generation.
