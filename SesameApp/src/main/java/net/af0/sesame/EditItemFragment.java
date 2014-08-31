@@ -175,7 +175,6 @@ public class EditItemFragment extends Fragment
 
     @Override
     public void onDestroyView() {
-        Log.e("ASDF", "ON STOP EDIT");
         if (progress_ != null) {
             progress_.dismiss();
         }

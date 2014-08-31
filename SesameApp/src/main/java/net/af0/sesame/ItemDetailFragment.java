@@ -52,8 +52,6 @@ public class ItemDetailFragment extends Fragment
 
     @Override
     public void onDestroyView() {
-        Log.e("ASDF", "ON STOP DETAIL");
-
         if (progress_ != null) {
             progress_.dismiss();
         }
