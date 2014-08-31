@@ -58,7 +58,8 @@ public class EditItemFragment extends Fragment
      * Mandatory empty constructor for the fragment manager to instantiate the fragment (e.g. upon
      * screen orientation changes).
      */
-    public EditItemFragment() { }
+    public EditItemFragment() {
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {

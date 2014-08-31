@@ -46,14 +46,16 @@ class Common {
                         public void OnFinish(Boolean success) {
                             try {  // Can throw exception on rotate, etc.
                                 progress.dismiss();
-                            } catch (IllegalArgumentException ex) {}
+                            } catch (IllegalArgumentException ex) {
+                            }
                         }
 
                         @Override
                         public void OnException(Exception exception) {
                             try {  // Can throw exception on rotate, etc.
                                 progress.dismiss();
-                            } catch (IllegalArgumentException ex) {}
+                            } catch (IllegalArgumentException ex) {
+                            }
                             Log.w("EXPORT", exception.toString());
                             DisplayException(ctx, ctx.getString(R.string.export_keys_failure_title),
                                     exception);

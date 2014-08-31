@@ -490,7 +490,8 @@ public final class ItemListActivity extends FragmentActivity
             Common.ArrayToTextView(
                     Common.decode(cursor.getBlob(
                             cursor.getColumnIndex(SQLCipherDatabase.COLUMN_USERNAME))),
-                    text2);
+                    text2
+            );
         }
 
         @Override
