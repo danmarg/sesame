@@ -130,13 +130,21 @@ class Common {
     }
 
     static void ArrayToTextView(char[] chars, TextView textView) {
-        textView.setText(chars, 0, chars.length);
+        // Compute text length explicitly, since chars can be a buffer longer than the contents.
+        int l = 0;
+        for (; l < chars.length; l++) {
+            if (chars[l] == 0) {
+                break;
+            }
+        }
+        textView.setText(chars, 0, l);
     }
 
     static void ZeroChars(char[] chars) {
-        for (int i = 0; i < chars.length; i++) {
-            chars[i] = 0;
+        if (chars != null) {
+            for (int i = 0; i < chars.length; i++) {
+                chars[i] = 0;
+            }
         }
     }
-
 }

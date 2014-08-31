@@ -226,7 +226,7 @@ public final class SQLCipherDatabase {
 
     public static Cursor getContaining(String substr) {
         // TODO: Ensure this works on non-ASCII searches. It seems to in some cases (real phone) and
-        // not others (emulator), so there may be an issue with mismatching locales? 
+        // not others (emulator), so there may be an issue with mismatching locales?
         String s = DatabaseUtils.sqlEscapeString("%" + substr + "%");
         return database_.query(TABLE_KEYS, allColumns_,
                 String.format("%s LIKE %s OR %s LIKE %s", COLUMN_DOMAIN, s, COLUMN_USERNAME, s),
