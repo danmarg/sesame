@@ -225,10 +225,8 @@ public final class SQLCipherDatabase {
     }
 
     public static Cursor getContaining(String substr) {
-        // TODO: Fix to work with non-ASCII Unicode.
-        // Case-insensitive search doesn't ever work with this in the default SQLite, but for some
-        // reason switching to blobs/char[]s for fields breaks case-sensitive unicode search. This
-        // may be worth it for security's sake, but...
+        // TODO: Ensure this works on non-ASCII searches. It seems to in some cases (real phone) and
+        // not others (emulator), so there may be an issue with mismatching locales? 
         String s = DatabaseUtils.sqlEscapeString("%" + substr + "%");
         return database_.query(TABLE_KEYS, allColumns_,
                 String.format("%s LIKE %s OR %s LIKE %s", COLUMN_DOMAIN, s, COLUMN_USERNAME, s),
