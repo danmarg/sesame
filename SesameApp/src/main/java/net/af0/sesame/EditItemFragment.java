@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.text.InputType;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +18,7 @@ import android.widget.TextView;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
 
+import java.nio.CharBuffer;
 import java.security.SecureRandom;
 
 /**
@@ -38,10 +38,10 @@ public class EditItemFragment extends Fragment
     // ID of the record being edited, if it's not a new one.
     private SQLCipherDatabase.Record existingRecord_;
     // Value of fields at time of add
-    private String username_;
-    private String domain_;
-    private String password_;
-    private String remarks_;
+    private char[] username_;
+    private char[] domain_;
+    private char[] password_;
+    private char[] remarks_;
     private View addItemView_;
     private View addItemFormView_;
     private EditText usernameView_;
@@ -108,20 +108,20 @@ public class EditItemFragment extends Fragment
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                username_ = usernameView_.getText().toString();
-                domain_ = domainView_.getText().toString();
-                password_ = passwordView_.getText().toString();
-                remarks_ = remarksView_.getText().toString();
+                username_ = Common.EditTextToArray(usernameView_);
+                domain_ = Common.EditTextToArray(domainView_);
+                password_ = Common.EditTextToArray(passwordView_);
+                remarks_ = Common.EditTextToArray(remarksView_);
 
                 boolean cancel = false;
                 View focusView = null;
 
                 // Check for required fields.
-                if (TextUtils.isEmpty(domain_) && TextUtils.isEmpty(username_)) {
+                if (domain_.length == 0 && username_.length == 0) {
                     usernameView_.setError(getString(R.string.error_field_required));
                     focusView = usernameView_;
                     cancel = true;
-                } else if (TextUtils.isEmpty(password_)) {
+                } else if (password_.length == 0) {
                     passwordView_.setError(getString(R.string.error_field_required));
                     focusView = passwordView_;
                     cancel = true;
@@ -177,6 +177,22 @@ public class EditItemFragment extends Fragment
         if (progress_ != null) {
             progress_.dismiss();
         }
+        Common.ZeroChars(username_);
+        Common.ZeroChars(password_);
+        Common.ZeroChars(domain_);
+        Common.ZeroChars(remarks_);
+        if (existingRecord_ != null) {
+            existingRecord_.forget();
+        }
+        usernameView_.setText("");
+        passwordView_.setText("");
+        domainView_.setText("");
+        remarksView_.setText("");
+
+        if (!twoPane_) {
+            getActivity().setTitle("");
+        }
+
         super.onStop();
     }
 
@@ -225,15 +241,15 @@ public class EditItemFragment extends Fragment
             return;
         }
         existingRecord_ = record;
-        usernameView_.setText(existingRecord_.getUsername());
-        passwordView_.setText(existingRecord_.getPassword());
-        domainView_.setText(existingRecord_.getDomain());
-        remarksView_.setText(existingRecord_.getRemarks());
+        Common.ArrayToTextView(existingRecord_.getUsername(), usernameView_);
+        Common.ArrayToTextView(existingRecord_.getPassword(), passwordView_);
+        Common.ArrayToTextView(existingRecord_.getDomain(), domainView_);
+        Common.ArrayToTextView(existingRecord_.getRemarks(), remarksView_);
 
         // Set title to the current item's domain in single-pane mode, but only when editing an
         // existing item.
         if (!twoPane_) {
-            getActivity().setTitle(existingRecord_.getDomain());
+            getActivity().setTitle(CharBuffer.wrap(existingRecord_.getDomain()));
         }
     }
 

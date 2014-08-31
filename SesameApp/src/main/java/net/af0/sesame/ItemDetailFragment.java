@@ -12,6 +12,8 @@ import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import java.nio.CharBuffer;
+
 /**
  * A fragment representing a single Item detail screen.
  * This fragment is either contained in a {@link ItemListActivity} in two-pane mode (on tablets) or
@@ -20,9 +22,14 @@ import android.widget.TextView;
 public class ItemDetailFragment extends Fragment
         implements SQLCipherDatabase.Callbacks<SQLCipherDatabase.Record> {
     // The item we're showing details for.
-    SQLCipherDatabase.Record item_;
+    SQLCipherDatabase.Record record_;
     ProgressDialog progress_;
     private View rootView_;
+
+    private TextView usernameView_;
+    private TextView passwordView_;
+    private TextView domainView_;
+    private TextView remarksView_;
 
     // Whether we're in two-pane mode, which dictates whether we update the activity title or not.
     private boolean twoPane_;
@@ -43,9 +50,34 @@ public class ItemDetailFragment extends Fragment
     }
 
     @Override
+    public void onStop() {
+        if (progress_ != null) {
+            progress_.dismiss();
+        }
+        if (record_ != null) {
+            record_.forget();
+        }
+        usernameView_.setText("");
+        passwordView_.setText("");
+        domainView_.setText("");
+        remarksView_.setText("");
+
+        if (!twoPane_) {
+            getActivity().setTitle("");
+        }
+
+        super.onStop();
+    }
+
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         rootView_ = inflater.inflate(R.layout.fragment_item_detail, container, false);
+
+        usernameView_ = ((TextView) rootView_.findViewById(R.id.username));
+        passwordView_ = ((TextView) rootView_.findViewById(R.id.password));
+        domainView_ = ((TextView) rootView_.findViewById(R.id.domain));
+        remarksView_ = ((TextView) rootView_.findViewById(R.id.remarks));
 
         loadFromDatabase();
 
@@ -86,37 +118,33 @@ public class ItemDetailFragment extends Fragment
      */
     public void OnFinish(SQLCipherDatabase.Record item) {
         progress_.dismiss();
-        item_ = item;
-        if (item_ == null) {
+        record_ = item;
+        if (record_ == null) {
             return;
         }
-        TextView usernameView_ = ((TextView) rootView_.findViewById(R.id.username));
-        TextView passwordView_ = ((TextView) rootView_.findViewById(R.id.password));
-        TextView domainView_ = ((TextView) rootView_.findViewById(R.id.domain));
-        TextView remarksView_ = ((TextView) rootView_.findViewById(R.id.remarks));
 
         // For each field, either set the value and show the field (since it may be hidden) or, if
         // empty, hide the field.
-        if (item_.getUsername() != null && !item_.getUsername().isEmpty()) {
-            usernameView_.setText(item_.getUsername());
+        if (record_.getUsername() != null && record_.getUsername().length > 0) {
+            Common.ArrayToTextView(record_.getUsername(), usernameView_);
             usernameView_.setVisibility(View.VISIBLE);
         } else {
             usernameView_.setVisibility(View.INVISIBLE);
         }
-        if (item_.getPassword() != null && !item_.getPassword().isEmpty()) {
-            passwordView_.setText(item_.getPassword());
+        if (record_.getPassword() != null && record_.getPassword().length > 0) {
+            Common.ArrayToTextView(record_.getPassword(), passwordView_);
             passwordView_.setVisibility(View.VISIBLE);
         } else {
             passwordView_.setVisibility(View.INVISIBLE);
         }
-        if (item_.getDomain() != null && !item_.getDomain().isEmpty()) {
-            domainView_.setText(item_.getDomain());
+        if (record_.getDomain() != null && record_.getDomain().length > 0) {
+            Common.ArrayToTextView(record_.getDomain(), domainView_);
             domainView_.setVisibility(View.VISIBLE);
         } else {
             domainView_.setVisibility(View.INVISIBLE);
         }
-        if (item_.getRemarks() != null && !item_.getRemarks().isEmpty()) {
-            remarksView_.setText(item_.getRemarks());
+        if (record_.getRemarks() != null && record_.getRemarks().length > 0) {
+            Common.ArrayToTextView(record_.getRemarks(), remarksView_);
             remarksView_.setVisibility(View.VISIBLE);
         } else {
             remarksView_.setVisibility(View.INVISIBLE);
@@ -125,7 +153,7 @@ public class ItemDetailFragment extends Fragment
         // Set title to the current item's domain, if unset. In two-pane mode the parent activity is
         // the ItemListActivity, and the title is already set.
         if (!twoPane_) {
-            getActivity().setTitle(item_.getDomain());
+            getActivity().setTitle(CharBuffer.wrap(record_.getDomain()));
         }
     }
 

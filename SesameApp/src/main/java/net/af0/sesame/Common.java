@@ -7,9 +7,17 @@ import android.content.Intent;
 import android.net.Uri;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.TextView;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -87,6 +95,46 @@ class Common {
                 .setMessage(e.getLocalizedMessage())
                 .setNeutralButton(ctx.getString(R.string.dismiss), null)
                 .create().show();
+    }
+
+    static char[] decode(byte[] bytes) {
+        CharsetDecoder decoder = Charset.defaultCharset().newDecoder();
+        ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
+        try {
+            CharBuffer charBuffer = decoder.decode(byteBuffer);
+            return charBuffer.array();
+        } catch (CharacterCodingException ex) {
+            Log.e("CHARSET", ex.toString());
+            return null;
+        }
+    }
+
+    static byte[] encode(char[] chars) {
+        CharsetEncoder encoder = Charset.defaultCharset().newEncoder();
+        CharBuffer charBuffer = CharBuffer.wrap(chars);
+        try {
+            ByteBuffer byteBuffer = encoder.encode(charBuffer);
+            return byteBuffer.array();
+        } catch (CharacterCodingException ex) {
+            Log.e("CHARSET", ex.toString());
+            return null;
+        }
+    }
+
+    static char[] EditTextToArray(EditText editText) {
+        char[] chars = new char[editText.getText().length()];
+        editText.getText().getChars(0, chars.length, chars, 0);
+        return chars;
+    }
+
+    static void ArrayToTextView(char[] chars, TextView textView) {
+        textView.setText(chars, 0, chars.length);
+    }
+
+    static void ZeroChars(char[] chars) {
+        for (int i = 0; i < chars.length; i++) {
+            chars[i] = 0;
+        }
     }
 
 }

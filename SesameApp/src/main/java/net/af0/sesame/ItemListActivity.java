@@ -12,15 +12,19 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.CursorAdapter;
 import android.text.InputType;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
 import android.widget.SearchView;
-import android.widget.SimpleCursorAdapter;
+import android.widget.TextView;
 
 import com.github.amlcurran.showcaseview.ShowcaseView;
 import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
@@ -61,7 +65,7 @@ public final class ItemListActivity extends FragmentActivity
     private boolean twoPane_;
     private long selectedId_;
     private ItemListFragment itemListFragment_;
-    private SimpleCursorAdapter itemListAdapter_;
+    private BlobCursorAdapter itemListAdapter_;
 
     @Override
     public void onPause() {
@@ -170,13 +174,9 @@ public final class ItemListActivity extends FragmentActivity
         itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.item_list);
 
-        itemListAdapter_ = new SimpleCursorAdapter(
+        itemListAdapter_ = new BlobCursorAdapter(
                 this,
-                R.layout.two_line_list_item,
                 null,
-                new String[]{SQLCipherDatabase.COLUMN_DOMAIN,
-                        SQLCipherDatabase.COLUMN_USERNAME},
-                new int[]{R.id.text1, R.id.text2},
                 0
         );
         itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {
@@ -466,6 +466,36 @@ public final class ItemListActivity extends FragmentActivity
                 return null;
             }
             return SQLCipherDatabase.getAllCursor();
+        }
+    }
+
+    static class BlobCursorAdapter extends CursorAdapter {
+        private LayoutInflater inflater_;
+
+        public BlobCursorAdapter(Context context, Cursor c, int flags) {
+            super(context, c, flags);
+            inflater_ = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        }
+
+        @Override
+        public void bindView(View view, Context context, Cursor cursor) {
+
+            TextView text1 = (TextView) view.findViewById(R.id.text1);
+            Common.ArrayToTextView(
+                    Common.decode(cursor.getBlob(
+                            cursor.getColumnIndex(SQLCipherDatabase.COLUMN_DOMAIN))),
+                    text1
+            );
+            TextView text2 = (TextView) view.findViewById(R.id.text2);
+            Common.ArrayToTextView(
+                    Common.decode(cursor.getBlob(
+                            cursor.getColumnIndex(SQLCipherDatabase.COLUMN_USERNAME))),
+                    text2);
+        }
+
+        @Override
+        public View newView(Context context, Cursor cursor, ViewGroup parent) {
+            return inflater_.inflate(R.layout.two_line_list_item, parent, false);
         }
     }
 }

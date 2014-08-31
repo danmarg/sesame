@@ -49,13 +49,13 @@ public final class SQLCipherDatabase {
     private static net.sqlcipher.database.SQLiteOpenHelper helper_;
     private static SQLiteDatabase database_;
 
-    private static Record createRecord(final String username, final String domain,
-                                       final String password, final String remarks) {
+    private static Record createRecord(final char[] username, final char[] domain,
+                                       final char[] password, final char[] remarks) {
         ContentValues values = new ContentValues();
-        values.put(COLUMN_USERNAME, username);
-        values.put(COLUMN_DOMAIN, domain);
-        values.put(COLUMN_PASSWORD, password);
-        values.put(COLUMN_REMARKS, remarks);
+        values.put(COLUMN_USERNAME, Common.encode(username));
+        values.put(COLUMN_DOMAIN, Common.encode(domain));
+        values.put(COLUMN_PASSWORD, Common.encode(password));
+        values.put(COLUMN_REMARKS, Common.encode(remarks));
         long id = database_.insert(TABLE_KEYS, null, values);
         Cursor crs = database_.query(TABLE_KEYS, allColumns_,
                 COLUMN_ID + "=" + id, null, null, null, null);
@@ -65,8 +65,8 @@ public final class SQLCipherDatabase {
         return r;
     }
 
-    public static void createRecord(final String username, final String domain,
-                                    final String password, final String remarks,
+    public static void createRecord(final char[] username, final char[] domain,
+                                    final char[] password, final char[] remarks,
                                     final Callbacks2<Boolean, Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Record r;
@@ -145,10 +145,10 @@ public final class SQLCipherDatabase {
             @Override
             protected Boolean doInBackground(Void... params) {
                 ContentValues values = new ContentValues();
-                values.put(COLUMN_USERNAME, r.getUsername());
-                values.put(COLUMN_DOMAIN, r.getDomain());
-                values.put(COLUMN_PASSWORD, r.getPassword());
-                values.put(COLUMN_REMARKS, r.getRemarks());
+                values.put(COLUMN_USERNAME, Common.encode(r.getUsername()));
+                values.put(COLUMN_DOMAIN, Common.encode(r.getDomain()));
+                values.put(COLUMN_PASSWORD, Common.encode(r.getPassword()));
+                values.put(COLUMN_REMARKS, Common.encode(r.getRemarks()));
                 try {
                     database_.update(TABLE_KEYS, values, COLUMN_ID + "=" + r.getId(), null);
                 } catch (Exception e) {
@@ -225,21 +225,27 @@ public final class SQLCipherDatabase {
     }
 
     public static Cursor getContaining(String substr) {
+        // TODO: Fix to work with non-ASCII Unicode.
+        // Case-insensitive search doesn't ever work with this in the default SQLite, but for some
+        // reason switching to blobs/char[]s for fields breaks case-sensitive unicode search. This
+        // may be worth it for security's sake, but...
         String s = DatabaseUtils.sqlEscapeString("%" + substr + "%");
         return database_.query(TABLE_KEYS, allColumns_,
                 String.format("%s LIKE %s OR %s LIKE %s", COLUMN_DOMAIN, s, COLUMN_USERNAME, s),
-                null, null, null, COLUMN_DOMAIN + " COLLATE NOCASE ASC, " + COLUMN_USERNAME +
-                        " COLLATE NOCASE ASC"
+                null, null, null,
+                COLUMN_DOMAIN + " COLLATE NOCASE ASC, "
+                        + COLUMN_USERNAME + " COLLATE NOCASE ASC"
         );
     }
+
 
     public static Record toRecord(Cursor crs) {
         Record r = new Record();
         r.setId(crs.getLong(0));
-        r.setUsername(crs.getString(1));
-        r.setDomain(crs.getString(2));
-        r.setPassword(crs.getString(3));
-        r.setRemarks(crs.getString(4));
+        r.setUsername(Common.decode(crs.getBlob(1)));
+        r.setDomain(Common.decode(crs.getBlob(2)));
+        r.setPassword(Common.decode(crs.getBlob(3)));
+        r.setRemarks(Common.decode(crs.getBlob(4)));
 
         return r;
     }
@@ -610,10 +616,17 @@ public final class SQLCipherDatabase {
     // Database model.
     public static class Record {
         private long id_;
-        private String username_;
-        private String domain_;
-        private String password_;  // TODO: switch these all to char[]?
-        private String remarks_;
+        private char[] username_;
+        private char[] domain_;
+        private char[] password_;
+        private char[] remarks_;
+
+        public void forget() {
+            Common.ZeroChars(username_);
+            Common.ZeroChars(password_);
+            Common.ZeroChars(domain_);
+            Common.ZeroChars(remarks_);
+        }
 
         public long getId() {
             return id_;
@@ -623,49 +636,36 @@ public final class SQLCipherDatabase {
             id_ = id;
         }
 
-        public String getUsername() {
+        public char[] getUsername() {
             return username_;
         }
 
-        public void setUsername(String username) {
+        public void setUsername(char[] username) {
             username_ = username;
         }
 
-        public String getDomain() {
+        public char[] getDomain() {
             return domain_;
         }
 
-        public void setDomain(String domain) {
+        public void setDomain(char[] domain) {
             domain_ = domain;
         }
 
-        public String getPassword() {
+        public char[] getPassword() {
             return password_;
         }
 
-        public void setPassword(String password) {
+        public void setPassword(char[] password) {
             password_ = password;
         }
 
-        public String getRemarks() {
+        public char[] getRemarks() {
             return remarks_;
         }
 
-        public void setRemarks(String remarks) {
+        public void setRemarks(char[] remarks) {
             remarks_ = remarks;
-        }
-
-        @Override
-        public String toString() {
-            if (getUsername() != null && getDomain() != null &&
-                    !getUsername().isEmpty() && !getDomain().isEmpty()) {
-                return getUsername() + " / " + getDomain();
-            } else if (getUsername() != null && !getUsername().isEmpty()) {
-                return getUsername();
-            } else if (getDomain() != null && !getDomain().isEmpty()) {
-                return getDomain();
-            }
-            return "";
         }
     }
 }
