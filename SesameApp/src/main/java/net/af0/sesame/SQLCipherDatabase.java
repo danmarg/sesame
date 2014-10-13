@@ -221,7 +221,7 @@ public final class SQLCipherDatabase {
 
     public static Cursor getAllCursor() {
         return database_.query(TABLE_KEYS, allColumns_, null, null, null, null,
-                COLUMN_DOMAIN + " COLLATE NOCASE ASC, " + COLUMN_USERNAME + " COLLATE NOCASE ASC");
+                "LOWER(" + COLUMN_DOMAIN + "), LOWER(" + COLUMN_USERNAME + ")");
     }
 
     public static Cursor getContaining(String substr) {
@@ -231,9 +231,7 @@ public final class SQLCipherDatabase {
         return database_.query(TABLE_KEYS, allColumns_,
                 String.format("%s LIKE %s OR %s LIKE %s", COLUMN_DOMAIN, s, COLUMN_USERNAME, s),
                 null, null, null,
-                COLUMN_DOMAIN + " COLLATE NOCASE ASC, "
-                        + COLUMN_USERNAME + " COLLATE NOCASE ASC"
-        );
+                "LOWER(" + COLUMN_DOMAIN + "), LOWER(" + COLUMN_USERNAME + ")");
     }
 
 
