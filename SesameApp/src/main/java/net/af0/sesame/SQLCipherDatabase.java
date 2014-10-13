@@ -44,7 +44,9 @@ public final class SQLCipherDatabase {
             // alias it. I hope nobody is reading this...
             COLUMN_ID + " AS _id", COLUMN_USERNAME, COLUMN_DOMAIN,
             COLUMN_PASSWORD, COLUMN_REMARKS};
-    private static final int DATABASE_VERSION = 3;
+    // In this version, fields are strings, not blobs.
+    private static final int STRING_DATABASE_VERSION = 3;
+    private static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "keys.db";
     private static net.sqlcipher.database.SQLiteOpenHelper helper_;
     private static SQLiteDatabase database_;
@@ -347,18 +349,26 @@ public final class SQLCipherDatabase {
                     // Now everything is hunky dory.
                     SQLiteDatabase imported = SQLiteDatabase.openDatabase(tmpDb.getPath(), password,
                             null, SQLiteDatabase.OPEN_READONLY, new DatabaseHook(metadata));
-                    if (imported.getVersion() != DATABASE_VERSION) {
+                    if (imported.getVersion() != DATABASE_VERSION &&
+                            imported.getVersion() != STRING_DATABASE_VERSION) {
                         // Because we're not using OpenHelper here, we have to handle version
-                        // mismatches ourselves. For now, versioning is unsupported!
+                        // mismatches ourselves.
                         throw new UnsupportedOperationException("Upgrade not supported!");
-
                     }
                     Cursor crs = imported.query(TABLE_KEYS, allColumns_, null, null, null, null,
                             null);
                     for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
-                        Record r = toRecord(crs);
-                        createRecord(r.getUsername(), r.getDomain(), r.getPassword(),
-                                r.getRemarks());
+                        if (imported.getVersion() == DATABASE_VERSION) {
+                            Record r = toRecord(crs);
+                            createRecord(r.getUsername(), r.getDomain(), r.getPassword(),
+                                    r.getRemarks());
+                        } else {
+                            // Get strings rather than blobs.
+                            createRecord(crs.getString(1).toCharArray(),
+                                    crs.getString(2).toCharArray(),
+                                    crs.getString(3).toCharArray(),
+                                    crs.getString(4).toCharArray());
+                        }
                     }
                     crs.close();
                     return true;
