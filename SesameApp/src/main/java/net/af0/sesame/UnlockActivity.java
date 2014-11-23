@@ -156,7 +156,11 @@ public final class UnlockActivity extends Activity implements SQLCipherDatabase.
     public void OnException(Exception exception) {
         Log.w("Unlocking database", exception.toString());
         dismissProgress();
-        passwordView_.setError(getString(R.string.error_incorrect_password));
+        if (exception instanceof UnsupportedOperationException) {
+            passwordView_.setError(getString(R.string.error_opening_unknown));
+        } else {
+            passwordView_.setError(getString(R.string.error_incorrect_password));
+        }
         passwordView_.requestFocus();
     }
 

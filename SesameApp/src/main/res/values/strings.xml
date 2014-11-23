@@ -76,6 +76,7 @@
     <string name="error_invalid_password">This password is too short</string>
     <string name="error_incorrect_password">This password is incorrect</string>
     <string name="error_field_required">This field is required</string>
+    <string name="error_opening_unknown">Error opening keyring!</string>
     <string name="error_password2_mismatch">Passwords must match</string>
     <string name="action_change_error">Unknown error</string>
 

@@ -51,15 +51,16 @@ public final class SQLCipherDatabase {
     private static net.sqlcipher.database.SQLiteOpenHelper helper_;
     private static SQLiteDatabase database_;
 
-    private static Record createRecord(final char[] username, final char[] domain,
+    private static Record createRecord(SQLiteDatabase database,
+                                       final char[] username, final char[] domain,
                                        final char[] password, final char[] remarks) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_USERNAME, Common.encode(username));
         values.put(COLUMN_DOMAIN, Common.encode(domain));
         values.put(COLUMN_PASSWORD, Common.encode(password));
         values.put(COLUMN_REMARKS, Common.encode(remarks));
-        long id = database_.insert(TABLE_KEYS, null, values);
-        Cursor crs = database_.query(TABLE_KEYS, allColumns_,
+        long id = database.insert(TABLE_KEYS, null, values);
+        Cursor crs = database.query(TABLE_KEYS, allColumns_,
                 COLUMN_ID + "=" + id, null, null, null, null);
         crs.moveToFirst();
         Record r = toRecord(crs);
@@ -77,7 +78,7 @@ public final class SQLCipherDatabase {
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
-                    r = createRecord(username, domain, password, remarks);
+                    r = createRecord(database_, username, domain, password, remarks);
                     return r != null;
                 } catch (Exception e) {
                     exception = e;
@@ -353,18 +354,19 @@ public final class SQLCipherDatabase {
                             imported.getVersion() != STRING_DATABASE_VERSION) {
                         // Because we're not using OpenHelper here, we have to handle version
                         // mismatches ourselves.
-                        throw new UnsupportedOperationException("Upgrade not supported!");
+                        throw new UnsupportedOperationException(
+                                String.format("Upgrade not supported! (%d)", imported.getVersion()));
                     }
                     Cursor crs = imported.query(TABLE_KEYS, allColumns_, null, null, null, null,
                             null);
                     for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
                         if (imported.getVersion() == DATABASE_VERSION) {
                             Record r = toRecord(crs);
-                            createRecord(r.getUsername(), r.getDomain(), r.getPassword(),
+                            createRecord(database_, r.getUsername(), r.getDomain(), r.getPassword(),
                                     r.getRemarks());
                         } else {
                             // Get strings rather than blobs.
-                            createRecord(crs.getString(1).toCharArray(),
+                            createRecord(database_, crs.getString(1).toCharArray(),
                                     crs.getString(2).toCharArray(),
                                     crs.getString(3).toCharArray(),
                                     crs.getString(4).toCharArray());
@@ -595,7 +597,26 @@ public final class SQLCipherDatabase {
         }
 
         public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
-            throw new UnsupportedOperationException("Upgrade not supported");
+            if (oldVersion != STRING_DATABASE_VERSION || newVersion != DATABASE_VERSION) {
+                throw new UnsupportedOperationException(
+                        String.format("Upgrade not supported! (%d -> %d", oldVersion, newVersion));
+            }
+            // Rename table.
+            database.execSQL("ALTER TABLE " + TABLE_KEYS + " RENAME TO tmp;");
+            database.execSQL(DATABASE_CREATE);
+            // Go through all the records in the old table.
+            Cursor crs = database.query("tmp", allColumns_, null, null, null, null,
+                    null);
+            for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
+                // Get strings rather than blobs, and create a new record.
+                createRecord(database, crs.getString(1).toCharArray(),
+                        crs.getString(2).toCharArray(),
+                        crs.getString(3).toCharArray(),
+                        crs.getString(4).toCharArray());
+            }
+            crs.close();
+            // Drop the renamed table.
+            database.execSQL("DROP TABLE tmp;");
         }
     }
 
