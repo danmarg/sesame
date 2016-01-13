@@ -18,7 +18,7 @@ repositories {
 task buildProto (type : Exec) {
     // Build protobuffer
     workingDir './src/main/java'
-    commandLine '/usr/local/bin/protoc'
+    commandLine 'protoc'
     args 'net/af0/sesame/DatabaseMetadata.proto'
     args '--java_out'
     args '.'
