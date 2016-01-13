@@ -28,7 +28,7 @@ tasks.preBuild.dependsOn(tasks.buildProto)
 
 android {
     compileSdkVersion 17
-    buildToolsVersion "20.0.0"
+    buildToolsVersion "23.0.2"
 
     defaultConfig {
         minSdkVersion 14
