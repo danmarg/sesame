@@ -13,7 +13,7 @@
 
     <uses-sdk
         android:minSdkVersion="14"
-        android:targetSdkVersion="20" />
+        android:targetSdkVersion="24" />
 
     <application
         android:allowBackup="true"
@@ -76,5 +76,8 @@
             android:name=".ChangePasswordActivity"
             android:label="@string/title_activity_change_password"/>
     </application>
+    <!-- Work better on Chromebooks. -->
+    <uses-feature android:name="android.hardware.touchscreen"
+                        android:required="false" />
 
 </manifest>
