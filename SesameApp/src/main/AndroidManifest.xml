@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="net.af0.sesame"
-    android:versionCode="11"
+    android:versionCode="12"
     android:versionName="1.0.3">
 
     <supports-screens
@@ -13,7 +13,7 @@
 
     <uses-sdk
         android:minSdkVersion="14"
-        android:targetSdkVersion="24" />
+        android:targetSdkVersion="25" />
 
     <application
         android:allowBackup="true"
@@ -78,6 +78,5 @@
     </application>
     <!-- Work better on Chromebooks. -->
     <uses-feature android:name="android.hardware.touchscreen"
-                        android:required="false" />
-
+            android:required="false" />
 </manifest>
