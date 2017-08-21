@@ -27,12 +27,12 @@ task buildProto (type : Exec) {
 tasks.preBuild.dependsOn(tasks.buildProto)
 
 android {
-    compileSdkVersion 17
+    compileSdkVersion "android-24"
     buildToolsVersion "23.0.2"
 
     defaultConfig {
-        minSdkVersion 14
-        targetSdkVersion 20
+        minSdkVersion 16
+        targetSdkVersion 24
     }
 
    signingConfigs {

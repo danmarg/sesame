@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="net.af0.sesame"
-    android:versionCode="12"
+    android:versionCode="13"
     android:versionName="1.0.3">
 
     <supports-screens
@@ -12,8 +12,8 @@
         android:xlargeScreens="true" />
 
     <uses-sdk
-        android:minSdkVersion="14"
-        android:targetSdkVersion="25" />
+        android:minSdkVersion="16"
+        android:targetSdkVersion="24" />
 
     <application
         android:allowBackup="true"
@@ -36,6 +36,7 @@
 
         <activity
             android:name=".ItemListActivity"
+            android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout"
             android:label="@string/app_name">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -43,6 +44,7 @@
         </activity>
         <activity
             android:name=".ItemDetailActivity"
+            android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout"
             android:label="@string/title_item_detail"
             android:parentActivityName=".ItemListActivity">
             <meta-data
@@ -51,6 +53,7 @@
         </activity>
         <activity
             android:name=".UnlockActivity"
+            android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout"
             android:label="@string/app_name"
             android:windowSoftInputMode="adjustResize|stateVisible">
             <intent-filter>
@@ -60,12 +63,15 @@
         </activity>
         <activity
             android:name=".CreateDatabaseActivity"
+            android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout"
             android:label="@string/title_activity_create_database"/>
         <activity
             android:name=".SettingsActivity"
+            android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout"
             android:label="@string/title_activity_settings"/>
         <activity
             android:name=".EditItemActivity"
+            android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout"
             android:label="@string/title_activity_add_item"
             android:parentActivityName=".ItemListActivity">
             <meta-data
@@ -74,6 +80,7 @@
         </activity>
         <activity
             android:name=".ChangePasswordActivity"
+            android:configChanges="screenSize|smallestScreenSize|orientation|screenLayout"
             android:label="@string/title_activity_change_password"/>
     </application>
     <!-- Work better on Chromebooks. -->
