@@ -16,8 +16,6 @@ import android.widget.EditText;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.github.amlcurran.showcaseview.ShowcaseView;
-
 import java.nio.CharBuffer;
 import java.security.SecureRandom;
 
@@ -29,8 +27,6 @@ import java.security.SecureRandom;
 public class EditItemFragment extends Fragment
         implements SQLCipherDatabase.Callbacks2<Boolean, SQLCipherDatabase.Record>,
         SQLCipherDatabase.Callbacks<SQLCipherDatabase.Record> {
-    // ShowcaseView for first run.
-    ShowcaseView showcase_;
     // Progress spinner for saving changes
     private ProgressDialog progress_;
     // Whether we're in two-pane mode, which dictates how we complete after adding.
@@ -142,16 +138,6 @@ public class EditItemFragment extends Fragment
             }
         });
 
-
-        // Show help showcase.
-        // TODO: Would be nice to set a target of the Generate button, but this seems not to work
-        // from a fragment. Also, adjust the opacity here, since it's hard to read.
-        showcase_ = new ShowcaseView.Builder(getActivity(), true)
-                .setContentTitle(R.string.showcase_generate_title)
-                .setContentText(R.string.showcase_generate_text)
-                .setStyle(R.style.AddItemShowcase)
-                .singleShot(Constants.SINGLE_SHOT_EDIT_ITEM)
-                .build();
 
         // Load an existing item in the background, if specified.
         if (getArguments().containsKey(Constants.ARG_ITEM_ID)) {

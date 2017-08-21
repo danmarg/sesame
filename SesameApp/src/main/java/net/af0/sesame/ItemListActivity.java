@@ -26,11 +26,6 @@ import android.widget.FilterQueryProvider;
 import android.widget.SearchView;
 import android.widget.TextView;
 
-import com.github.amlcurran.showcaseview.ShowcaseView;
-import com.github.amlcurran.showcaseview.targets.ActionItemTarget;
-import com.github.amlcurran.showcaseview.targets.ActionViewTarget;
-import com.github.amlcurran.showcaseview.targets.Target;
-
 import net.sqlcipher.CursorWrapper;
 
 import java.io.IOException;
@@ -56,8 +51,6 @@ public final class ItemListActivity extends FragmentActivity
     private static final int EDIT_RECORD_REQUEST = 1;
 
     private static final int LOADER_ID = 1;
-    // ShowcaseView for first run.
-    ShowcaseView showcase_;
     // Progress spinner for database import.
     private ProgressDialog progress_;
 
@@ -108,26 +101,6 @@ public final class ItemListActivity extends FragmentActivity
         SearchView searchView =
                 (SearchView) menu.findItem(R.id.search).getActionView();
         searchView.setOnQueryTextListener(this);
-
-        // Show help showcase.
-        Target t = new ActionItemTarget(this, R.id.add);
-        int text;
-        try {
-            // This seems to be the only way to tell if the action bar item is visible?
-            // See https://github.com/amlcurran/ShowcaseView/issues/195.
-            t.getPoint();
-            text = R.string.showcase_add_content_no_overflow;
-        } catch (NullPointerException ex) {
-            t = new ActionViewTarget(this, ActionViewTarget.Type.OVERFLOW);
-            text = R.string.showcase_add_content_in_overflow;
-        }
-        showcase_ = new ShowcaseView.Builder(this, true)
-                .setTarget(t)
-                .setContentTitle(R.string.showcase_add_title)
-                .setContentText(text)
-                .setStyle(R.style.AppTheme)
-                .singleShot(Constants.SINGLE_SHOT_ITEM_LIST)
-                .build();
 
         if (twoPane_) {
             menu.add(0, R.id.action_edit, Menu.NONE, R.string.edit);

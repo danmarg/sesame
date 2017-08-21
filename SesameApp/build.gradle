@@ -53,7 +53,6 @@ android {
 }
 
 dependencies {
-    compile 'com.github.amlcurran.showcaseview:library:5.1.0-SNAPSHOT@aar'
     compile 'com.android.support:support-v4:20.0.0'
     compile files('libs/commons-codec.jar')
     compile files('libs/guava-r09.jar')
