@@ -24,7 +24,7 @@ public class DatabaseBackupAgent extends BackupAgentHelper {
             return;  // No backup requested
         }
         FileBackupHelper file_helper = new FileBackupHelper(
-                this, SQLCipherDatabase.getDatabaseFilePath(this).getName());
+                this, SQLCipherDatabase.Instance().getDatabaseFilePath(this).getName());
         addHelper("db_file_helper", file_helper);
         // Backup prefs, too.
         SharedPreferencesBackupHelper prefs_helper =
@@ -36,11 +36,11 @@ public class DatabaseBackupAgent extends BackupAgentHelper {
     public void onBackup(ParcelFileDescriptor oldState, BackupDataOutput data,
                          ParcelFileDescriptor newState) throws IOException {
         // Begin a transaction to prevent database changes while backing up.
-        SQLCipherDatabase.BeginTransaction();
+        SQLCipherDatabase.Instance().beginTransaction();
         try {
             super.onBackup(oldState, data, newState);
         } finally {
-            SQLCipherDatabase.EndTransaction();
+            SQLCipherDatabase.Instance().endTransaction();
         }
     }
 
@@ -53,17 +53,17 @@ public class DatabaseBackupAgent extends BackupAgentHelper {
         // what would happen then. The alternatives are poor, however; if the password for the
         // backup is different than the current password, we have no way to import it without
         // prompting the user.
-        SQLCipherDatabase.BeginTransaction();
+        SQLCipherDatabase.Instance().beginTransaction();
         try {
             super.onRestore(data, appVersionCode, newState);
         } finally {
-            SQLCipherDatabase.EndTransaction();
+            SQLCipherDatabase.Instance().endTransaction();
         }
     }
 
     @Override
     public File getFilesDir() {
-        File path = SQLCipherDatabase.getDatabaseFilePath(this);
+        File path = SQLCipherDatabase.Instance().getDatabaseFilePath(this);
         return path.getParentFile();
     }
 }

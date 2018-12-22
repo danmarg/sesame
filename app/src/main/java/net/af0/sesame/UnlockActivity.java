@@ -32,12 +32,12 @@ public final class UnlockActivity extends Activity implements SQLCipherDatabase.
         setContentView(R.layout.activity_unlock);
 
         // If the database does not yet exist, redirect to the CreateDatabaseActivity.
-        if (!SQLCipherDatabase.Exists(this)) {
+        if (!SQLCipherDatabase.Instance().exists(this)) {
             startActivity(new Intent(getBaseContext(), CreateDatabaseActivity.class).setFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |
                             Intent.FLAG_ACTIVITY_NO_ANIMATION
             ));
-        } else if (!SQLCipherDatabase.isLocked()) {
+        } else if (!SQLCipherDatabase.Instance().isLocked()) {
             startActivity(new Intent(getBaseContext(), ItemListActivity.class).setFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |
                             Intent.FLAG_ACTIVITY_NO_ANIMATION
@@ -109,8 +109,8 @@ public final class UnlockActivity extends Activity implements SQLCipherDatabase.
         }
 
         // Lock (if we're coming from the "lock" button.
-        if (!SQLCipherDatabase.isLocked()) {
-            SQLCipherDatabase.Lock();
+        if (!SQLCipherDatabase.Instance().isLocked()) {
+            SQLCipherDatabase.Instance().Lock();
         }
 
         super.onResume();
@@ -149,7 +149,7 @@ public final class UnlockActivity extends Activity implements SQLCipherDatabase.
             progress_.setTitle(R.string.unlock_progress_unlocking);
             progress_.setCancelable(false);
             progress_.show();
-            SQLCipherDatabase.OpenDatabase(getBaseContext(), password_, this);
+            SQLCipherDatabase.Instance().openDatabase(getBaseContext(), password_, this);
         }
     }
 

@@ -111,7 +111,7 @@ public final class CreateDatabaseActivity extends Activity
             progress_.setTitle(R.string.creating_database_progress);
             progress_.setCancelable(false);
             progress_.show();
-            SQLCipherDatabase.CreateDatabase(getBaseContext(), password_, this);
+            SQLCipherDatabase.Instance().createDatabase(getBaseContext(), password_, this);
         }
     }
 

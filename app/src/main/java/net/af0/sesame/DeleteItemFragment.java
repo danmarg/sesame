@@ -78,7 +78,7 @@ public final class DeleteItemFragment extends DialogFragment
         progress_.setTitle(R.string.delete_progress_deleting);
         progress_.setCancelable(false);
         progress_.show();
-        SQLCipherDatabase.deleteRecord(itemId_, this);
+        SQLCipherDatabase.Instance().deleteRecord(itemId_, this);
     }
 
     public void OnFinish(Boolean success, SQLCipherDatabase.Record r) {

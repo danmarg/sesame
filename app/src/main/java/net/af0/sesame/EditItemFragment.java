@@ -145,7 +145,7 @@ public class EditItemFragment extends Fragment
             progress_.setCancelable(false);
             progress_.setTitle(R.string.progress_loading);
             progress_.show();
-            SQLCipherDatabase.getRecord(getArguments().getLong(Constants.ARG_ITEM_ID), this);
+            SQLCipherDatabase.Instance().getRecord(getArguments().getLong(Constants.ARG_ITEM_ID), this);
         }
 
         return addItemView_;
@@ -290,9 +290,9 @@ public class EditItemFragment extends Fragment
             existingRecord_.setDomain(domain_);
             existingRecord_.setPassword(password_);
             existingRecord_.setRemarks(remarks_);
-            SQLCipherDatabase.updateRecord(existingRecord_, this);
+            SQLCipherDatabase.Instance().updateRecord(existingRecord_, this);
         } else {
-            SQLCipherDatabase.createRecord(username_, domain_, password_, remarks_, this);
+            SQLCipherDatabase.Instance().createRecord(username_, domain_, password_, remarks_, this);
         }
     }
 }

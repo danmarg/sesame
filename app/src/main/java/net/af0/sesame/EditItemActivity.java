@@ -42,7 +42,7 @@ public final class EditItemActivity extends FragmentActivity {
     @Override
     protected void onResume() {
         // If we're locked, go to the unlock view.
-        if (SQLCipherDatabase.isLocked()) {
+        if (SQLCipherDatabase.Instance().isLocked()) {
             startActivity(new Intent(getBaseContext(), UnlockActivity.class).setFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |
                             Intent.FLAG_ACTIVITY_NO_ANIMATION

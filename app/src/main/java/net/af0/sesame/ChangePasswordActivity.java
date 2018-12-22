@@ -132,7 +132,7 @@ public final class ChangePasswordActivity extends Activity
             progress_.setTitle(R.string.changing_password_progress);
             progress_.setCancelable(false);
             progress_.show();
-            SQLCipherDatabase.ChangePassword(password_, this);
+            SQLCipherDatabase.Instance().changePassword(password_, this);
         }
     }
 

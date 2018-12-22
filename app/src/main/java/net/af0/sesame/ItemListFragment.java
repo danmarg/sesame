@@ -56,7 +56,7 @@ public final class ItemListFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (SQLCipherDatabase.isLocked()) {
+        if (SQLCipherDatabase.Instance().isLocked()) {
             startActivity(new Intent(getActivity().getBaseContext(), UnlockActivity.class));
             return;
         }

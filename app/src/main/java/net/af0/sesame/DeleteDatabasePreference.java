@@ -21,7 +21,7 @@ public final class DeleteDatabasePreference extends DialogPreference
         super.onDialogClosed(positiveResult);
 
         if (positiveResult) {
-            SQLCipherDatabase.DeleteDatabase(getContext(), this);
+            SQLCipherDatabase.Instance().deleteDatabase(getContext(), this);
             getContext().startActivity(new Intent(getContext(), CreateDatabaseActivity.class));
         }
     }

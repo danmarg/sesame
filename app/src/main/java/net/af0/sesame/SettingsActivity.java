@@ -46,7 +46,7 @@ public final class SettingsActivity extends Activity {
 
             // Only allow password change when the database is unlocked.
             this.findPreference(Constants.PREFS_CHANGE_PASSWORD).setEnabled(
-                    !SQLCipherDatabase.isLocked());
+                    !SQLCipherDatabase.Instance().isLocked());
         }
     }
 

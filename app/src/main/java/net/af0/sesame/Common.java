@@ -65,7 +65,7 @@ class Common {
                         public void OnCancelled() {
                         }
                     };
-            SQLCipherDatabase.ExportDatabase(ctx, dstStr, callbacks);
+            SQLCipherDatabase.Instance().exportDatabase(ctx, dstStr, callbacks);
         } catch (java.io.IOException e) {
             Log.e("EXPORT", e.toString());
             DisplayException(ctx, ctx.getString(R.string.export_keys_failure_title), e);

@@ -83,7 +83,7 @@ public final class ItemListActivity extends FragmentActivity
         }
 
         // If we're locked, go to the unlock view.
-        if (SQLCipherDatabase.isLocked()) {
+        if (SQLCipherDatabase.Instance().isLocked()) {
             startActivity(new Intent(getBaseContext(), UnlockActivity.class).setFlags(
                     Intent.FLAG_ACTIVITY_CLEAR_TOP));
         } else {
@@ -155,7 +155,7 @@ public final class ItemListActivity extends FragmentActivity
         itemListAdapter_.setFilterQueryProvider(new FilterQueryProvider() {
             @Override
             public Cursor runQuery(CharSequence constraint) {
-                return SQLCipherDatabase.getContaining(constraint.toString());
+                return SQLCipherDatabase.Instance().getContaining(constraint.toString());
             }
         });
         getSupportLoaderManager().initLoader(LOADER_ID, null, this);
@@ -388,7 +388,7 @@ public final class ItemListActivity extends FragmentActivity
                 progress_.setTitle(R.string.progress_loading);
                 progress_.setCancelable(false);
                 progress_.show();
-                SQLCipherDatabase.ImportDatabase(ctx, src, password, ctx);
+                SQLCipherDatabase.Instance().importDatabase(ctx, src, password, ctx);
             }
         });
         alert.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -435,10 +435,10 @@ public final class ItemListActivity extends FragmentActivity
 
         @Override
         public Cursor loadInBackground() {
-            if (SQLCipherDatabase.isLocked()) {
+            if (SQLCipherDatabase.Instance().isLocked()) {
                 return null;
             }
-            return SQLCipherDatabase.getAllCursor();
+            return SQLCipherDatabase.Instance().getAllCursor();
         }
     }
 
@@ -456,13 +456,13 @@ public final class ItemListActivity extends FragmentActivity
             TextView text1 = (TextView) view.findViewById(R.id.text1);
             Common.ArrayToTextView(
                     Common.decode(cursor.getBlob(
-                            cursor.getColumnIndex(SQLCipherDatabase.COLUMN_DOMAIN))),
+                            cursor.getColumnIndex(SQLCipherDatabase.Instance().COLUMN_DOMAIN))),
                     text1
             );
             TextView text2 = (TextView) view.findViewById(R.id.text2);
             Common.ArrayToTextView(
                     Common.decode(cursor.getBlob(
-                            cursor.getColumnIndex(SQLCipherDatabase.COLUMN_USERNAME))),
+                            cursor.getColumnIndex(SQLCipherDatabase.Instance().COLUMN_USERNAME))),
                     text2
             );
         }
