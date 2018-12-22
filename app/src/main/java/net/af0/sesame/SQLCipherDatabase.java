@@ -39,7 +39,7 @@ public final class SQLCipherDatabase {
             COLUMN_PASSWORD + " text," +
             COLUMN_REMARKS + " text);";
     private static final String[] allColumns_ = {
-            // Stupid. I named the field "id" and SimpleCursorFactory expects "id". Rather than
+            // Stupid. I named the field "id" and SimpleCursorFactory expects "id_". Rather than
             // rename and break compatibility to gracefully handle database upgrades, let's just
             // alias it. I hope nobody is reading this...
             COLUMN_ID + " AS _id", COLUMN_USERNAME, COLUMN_DOMAIN,
