@@ -3,10 +3,11 @@ package net.af0.sesame;
 // A metadata message to prefix database exports with, so that at import-time
 //  we know the details needed to unlock this database.
 message Database {
+  reserved 2;
   // Database version
   optional int32 version = 1;
-  // cipher, as specified to SQLCipher
-  optional string cipher = 2 [default = "aes-256-cbc"];
   // KDF iterations
   optional int32 kdf_iter = 3;
+  // SQLCipher major version.
+  optional string sqlcipher_version = 4;
 }

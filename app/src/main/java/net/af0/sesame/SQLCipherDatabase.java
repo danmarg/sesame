@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
@@ -20,6 +21,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * Class wrapping the database interactions. To be used as a singleton.
@@ -293,7 +296,39 @@ public final class SQLCipherDatabase {
                 try {
                     if (helper_ == null) {
                         SQLiteDatabase.loadLibs(ctx);
-                        helper_ = new OpenHelper(ctx, database_name_, getMetadataFromPrefs(ctx));
+                        DatabaseMetadata.Database metadata = getMetadataFromPrefs(ctx);
+                        if (!metadata.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION)) {
+                            // Unset = sqlcipher3. Upgrade from SQLCipher 3 to 4.
+                            SQLCipherDatabase.OpenHelper legacyHelper = new OpenHelper(ctx,
+                                    database_name_, metadata);
+                            SQLiteDatabase legacyDb = legacyHelper.getWritableDatabase(password);
+                            // Export to a new database.
+                            File newDbName = ctx.getDatabasePath("newDB.db");
+                            DatabaseMetadata.Database newMetadata = DatabaseMetadata.Database.newBuilder(metadata)
+                                    .setSqlcipherVersion(Constants.SQLCIPHER_VERSION).build();
+                            SQLCipherDatabase.OpenHelper newDbHelper = new OpenHelper(ctx,
+                                    newDbName.getName(), newMetadata);
+                            SQLiteDatabase newDb = newDbHelper.getWritableDatabase(password);
+                            Cursor crs = legacyDb.query(TABLE_KEYS, allColumns_, null, null, null, null,
+                                    null);
+                            for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
+                                Record r = toRecord(crs);
+                                createRecord(newDb, r.getUsername(), r.getDomain(), r.getPassword(),
+                                             r.getRemarks());
+                            }
+                            crs.close();
+                            newDb.close();
+
+                            // Move the file over.
+                            newDbName.renameTo(ctx.getDatabasePath(database_name_));
+                            metadata = newMetadata;
+                            // Update the prefs.
+                            SharedPreferences.Editor preferencesEditor = ctx.getSharedPreferences(
+                                    Constants.DB_METADATA_PREF, Context.MODE_PRIVATE).edit();
+                            preferencesEditor.putString(Constants.DB_METADATA_PREF,
+                                    Base64.encodeToString(metadata.toByteArray(), Base64.DEFAULT));
+                        }
+                        helper_ = new OpenHelper(ctx, database_name_, metadata);
                     }
                     database_ = helper_.getWritableDatabase(password);
                 } catch (Exception e) {
@@ -342,10 +377,7 @@ public final class SQLCipherDatabase {
                     // Get temporary path to write database minus metadata to.
                     File tmpDb = File.createTempFile(Constants.KEY_IMPORT_TMPNAME,
                             Constants.KEY_IMPORT_SUFFIX, ctx.getCacheDir());
-                    DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder()
-                            .setVersion(DATABASE_VERSION)
-                            .setKdfIter(Constants.KDF_ITER)
-                            .build();
+                    DatabaseMetadata.Database metadata;
                     OutputStream tmpDbStr = new FileOutputStream(tmpDb);
                     try {
                         // Parse the DatabaseMetadata.
@@ -363,7 +395,7 @@ public final class SQLCipherDatabase {
                     SQLiteDatabase imported = SQLiteDatabase.openDatabase(tmpDb.getPath(), password,
                             null, SQLiteDatabase.OPEN_READONLY, new DatabaseHook(metadata));
                     if (imported.getVersion() != DATABASE_VERSION &&
-                            imported.getVersion() != STRING_DATABASE_VERSION) {
+                        imported.getVersion() != STRING_DATABASE_VERSION) {
                         // Because we're not using OpenHelper here, we have to handle version
                         // mismatches ourselves.
                         throw new UnsupportedOperationException(
@@ -462,8 +494,11 @@ public final class SQLCipherDatabase {
             callbacks.OnException(new SQLiteException("file already exists"));
         }
         // Store a DatabaseMetadata object with our creation defaults.
-        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder().setVersion(
-                DATABASE_VERSION).setKdfIter(Constants.KDF_ITER).build();
+        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder()
+                .setVersion(DATABASE_VERSION)
+                .setKdfIter(Constants.KDF_ITER)
+                .setSqlcipherVersion(Constants.SQLCIPHER_VERSION)
+                .build();
         SharedPreferences.Editor preferencesEditor = ctx.getSharedPreferences(
                 Constants.DB_METADATA_PREF, Context.MODE_PRIVATE).edit();
         preferencesEditor.putString(Constants.DB_METADATA_PREF,
@@ -561,12 +596,10 @@ public final class SQLCipherDatabase {
     }
 
     public boolean exists(Context ctx) {
-      // XXX
         return ctx.getDatabasePath(database_name_).exists();
     }
 
     public File getDatabaseFilePath(Context ctx) {
-      // XXX
         return ctx.getDatabasePath(database_name_);
     }
 
@@ -602,8 +635,13 @@ public final class SQLCipherDatabase {
     }
 
     private static class OpenHelper extends net.sqlcipher.database.SQLiteOpenHelper {
+        private Context ctx_;
+        private String database_name_;
         public OpenHelper(Context ctx, String database_name, DatabaseMetadata.Database metadata) {
             super(ctx, database_name, null, DATABASE_VERSION, new DatabaseHook(metadata));
+
+            ctx_ = ctx;
+            database_name_ = database_name;
         }
 
         public void onCreate(SQLiteDatabase database) {
@@ -627,10 +665,10 @@ public final class SQLCipherDatabase {
                         crs.getString(2).toCharArray(),
                         crs.getString(3).toCharArray(),
                         crs.getString(4).toCharArray());
+                crs.close();
+                // Drop the renamed table.
+                database.execSQL("DROP TABLE tmp;");
             }
-            crs.close();
-            // Drop the renamed table.
-            database.execSQL("DROP TABLE tmp;");
         }
     }
 
@@ -647,10 +685,13 @@ public final class SQLCipherDatabase {
 
         @Override
         public void postKey(SQLiteDatabase database) {
-            database.rawExecSQL(String.format("PRAGMA kdf_iter = %d",
-                    metadata_.getKdfIter()));
-            database.rawExecSQL(String.format("PRAGMA cipher = '%s'",
-                    metadata_.getCipher()));
+            database.rawExecSQL(String.format("PRAGMA kdf_iter = %d", metadata_.getKdfIter()));
+            if (!metadata_.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION)) {
+                // Unset means version 3. Use v3 defaults.
+                database.rawExecSQL(String.format("PRAGMA cipher_page_size = 1024"));
+                database.rawExecSQL(String.format("PRAGMA cipher_hmac_algorithm = HMAC_SHA1"));
+                database.rawExecSQL(String.format("PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA1"));
+            }
         }
     }
 

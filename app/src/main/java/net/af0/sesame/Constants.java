@@ -82,6 +82,10 @@ class Constants {
      */
     static final int KDF_ITER = 256000;
     /**
+     * SQLCipher library version. Only major version changes matter here.
+     */
+    static final String SQLCIPHER_VERSION = "4";
+    /**
      * Preference key for storing the serialized DatabaseMetadata proto for the current database.
      */
     static final String DB_METADATA_PREF = "db_metadata";
