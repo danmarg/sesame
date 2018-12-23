@@ -19,6 +19,7 @@ import net.sqlcipher.database.SQLiteDatabaseHook;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -264,25 +265,18 @@ public final class SQLCipherDatabase {
         return r;
     }
 
-    private static DatabaseMetadata.Database getMetadataFromPrefs(Context ctx) {
-        DatabaseMetadata.Database metadata = DatabaseMetadata.Database.newBuilder()
-                .setVersion(DATABASE_VERSION)
-                .setKdfIter(Constants.KDF_ITER)
-                .build();
+    private static DatabaseMetadata.Database getMetadataFromPrefs(Context ctx) throws InvalidProtocolBufferException {
+        DatabaseMetadata.Database metadata;
+
         SharedPreferences prefs = ctx.getSharedPreferences(Constants.DB_METADATA_PREF,
                 Context.MODE_PRIVATE);
-        try {
-            metadata =
-                    DatabaseMetadata.Database.newBuilder(metadata).mergeFrom(
-                            DatabaseMetadata.Database.parseFrom(Base64.decode(prefs.getString(
-                                            Constants.DB_METADATA_PREF, ""),
-                                    Base64.DEFAULT
-                            ))
-                    ).build();
-        } catch (InvalidProtocolBufferException e) {
-            Log.e("IMPORT", Log.getStackTraceString(e));
-            // Go with defaults anyway. Uh oh...
-        }
+        metadata =
+                DatabaseMetadata.Database.newBuilder().mergeFrom(
+                        DatabaseMetadata.Database.parseFrom(Base64.decode(prefs.getString(
+                                        Constants.DB_METADATA_PREF, ""),
+                                Base64.DEFAULT
+                        ))
+                ).build();
         return metadata;
     }
 
@@ -297,6 +291,7 @@ public final class SQLCipherDatabase {
                     if (helper_ == null) {
                         SQLiteDatabase.loadLibs(ctx);
                         DatabaseMetadata.Database metadata = getMetadataFromPrefs(ctx);
+
                         if (!metadata.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION)) {
                             // Unset = sqlcipher3. Upgrade from SQLCipher 3 to 4.
                             SQLCipherDatabase.OpenHelper legacyHelper = new OpenHelper(ctx,
@@ -320,13 +315,16 @@ public final class SQLCipherDatabase {
                             newDb.close();
 
                             // Move the file over.
-                            newDbName.renameTo(ctx.getDatabasePath(database_name_));
+                            if (!newDbName.renameTo(ctx.getDatabasePath(database_name_))) {
+                                throw new IOException("Renaming database failed!");
+                            }
                             metadata = newMetadata;
                             // Update the prefs.
                             SharedPreferences.Editor preferencesEditor = ctx.getSharedPreferences(
                                     Constants.DB_METADATA_PREF, Context.MODE_PRIVATE).edit();
                             preferencesEditor.putString(Constants.DB_METADATA_PREF,
                                     Base64.encodeToString(metadata.toByteArray(), Base64.DEFAULT));
+                            preferencesEditor.apply();
                         }
                         helper_ = new OpenHelper(ctx, database_name_, metadata);
                     }
@@ -503,7 +501,7 @@ public final class SQLCipherDatabase {
                 Constants.DB_METADATA_PREF, Context.MODE_PRIVATE).edit();
         preferencesEditor.putString(Constants.DB_METADATA_PREF,
                 Base64.encodeToString(metadata.toByteArray(), Base64.DEFAULT));
-        preferencesEditor.commit();
+        preferencesEditor.apply();
         // Open normally.
         openDatabase(ctx, password, callbacks);
     }
