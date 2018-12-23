@@ -292,8 +292,7 @@ public final class SQLCipherDatabase {
                         SQLiteDatabase.loadLibs(ctx);
                         DatabaseMetadata.Database metadata = getMetadataFromPrefs(ctx);
 
-                        if (!metadata.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION)) {
-                            // Unset = sqlcipher3. Upgrade from SQLCipher 3 to 4.
+                        if (metadata.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION_3)) {
                             SQLCipherDatabase.OpenHelper legacyHelper = new OpenHelper(ctx,
                                     database_name_, metadata);
                             SQLiteDatabase legacyDb = legacyHelper.getWritableDatabase(password);
@@ -325,6 +324,8 @@ public final class SQLCipherDatabase {
                             preferencesEditor.putString(Constants.DB_METADATA_PREF,
                                     Base64.encodeToString(metadata.toByteArray(), Base64.DEFAULT));
                             preferencesEditor.apply();
+                        } else if (!metadata.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION)) {
+                            throw new UnsupportedOperationException("Unknown SQLCipher version " + metadata.getSqlcipherVersion());
                         }
                         helper_ = new OpenHelper(ctx, database_name_, metadata);
                     }
@@ -684,8 +685,7 @@ public final class SQLCipherDatabase {
         @Override
         public void postKey(SQLiteDatabase database) {
             database.rawExecSQL(String.format("PRAGMA kdf_iter = %d", metadata_.getKdfIter()));
-            if (!metadata_.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION)) {
-                // Unset means version 3. Use v3 defaults.
+            if (metadata_.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION_3)) {
                 database.rawExecSQL(String.format("PRAGMA cipher_page_size = 1024"));
                 database.rawExecSQL(String.format("PRAGMA cipher_hmac_algorithm = HMAC_SHA1"));
                 database.rawExecSQL(String.format("PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA1"));

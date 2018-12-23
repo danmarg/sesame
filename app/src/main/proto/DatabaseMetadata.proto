@@ -9,5 +9,5 @@ message Database {
   // KDF iterations
   optional int32 kdf_iter = 3;
   // SQLCipher major version.
-  optional string sqlcipher_version = 4;
+  optional string sqlcipher_version = 4 [default="3"];
 }

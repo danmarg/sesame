@@ -86,6 +86,10 @@ class Constants {
      */
     static final String SQLCIPHER_VERSION = "4";
     /**
+     * SQLCipher library version 3. This requires old defaults be used.
+     */
+    static final String SQLCIPHER_VERSION_3 = "3";
+    /**
      * Preference key for storing the serialized DatabaseMetadata proto for the current database.
      */
     static final String DB_METADATA_PREF = "db_metadata";
