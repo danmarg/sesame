@@ -28,7 +28,8 @@ public class DatabaseBackupAgent extends BackupAgentHelper {
         addHelper("db_file_helper", file_helper);
         // Backup prefs, too.
         SharedPreferencesBackupHelper prefs_helper =
-                new SharedPreferencesBackupHelper(this, Constants.PREFS_BACKUP);
+                new SharedPreferencesBackupHelper(this, Constants.PREFS_BACKUP,
+                        Constants.DB_METADATA_PREF);
         addHelper("prefs_helper", prefs_helper);
     }
 

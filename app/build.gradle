@@ -6,7 +6,7 @@ android {
         applicationId "net.af0.sesame"
         minSdkVersion 15
         targetSdkVersion 28
-        versionCode 16
+        versionCode 17
         versionName "1.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
