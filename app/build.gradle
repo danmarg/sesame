@@ -10,7 +10,7 @@ android {
         applicationId "net.af0.sesame"
         minSdkVersion 16
         targetSdkVersion 30
-        versionCode 18
+        versionCode 19
         versionName "1.3"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -65,7 +65,7 @@ processResources {
     exclude('**/*.proto')
 }
 
-dependencies {  
+dependencies {
     implementation 'androidx.appcompat:appcompat:1.3.0'
     implementation 'com.google.android.material:material:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
