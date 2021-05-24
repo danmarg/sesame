@@ -32,8 +32,8 @@ public final class CreateDatabaseActivity extends Activity
         setContentView(R.layout.activity_create_database);
 
         // Set up the creation form.
-        passwordView_ = (EditText) findViewById(R.id.newPassword);
-        password2View_ = (EditText) findViewById(R.id.newPassword2);
+        passwordView_ = findViewById(R.id.newPassword);
+        password2View_ = findViewById(R.id.newPassword2);
         password2View_.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {

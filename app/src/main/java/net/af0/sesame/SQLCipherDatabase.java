@@ -54,7 +54,7 @@ public final class SQLCipherDatabase {
     private static final String DATABASE_NAME = "keys.db";
 
 
-    private static SQLCipherDatabase INSTANCE_ = new SQLCipherDatabase(DATABASE_NAME);
+    private static final SQLCipherDatabase INSTANCE_ = new SQLCipherDatabase(DATABASE_NAME);
     public static SQLCipherDatabase Instance() {
       return INSTANCE_;
     }
@@ -617,7 +617,7 @@ public final class SQLCipherDatabase {
     }
 
 
-    static interface Callbacks<T> {
+    interface Callbacks<T> {
         void OnFinish(T x);
 
         void OnException(Exception exception);
@@ -625,7 +625,7 @@ public final class SQLCipherDatabase {
         void OnCancelled();
     }
 
-    static interface Callbacks2<T1, T2> {
+    interface Callbacks2<T1, T2> {
         void OnFinish(T1 x, T2 y);
 
         void OnException(Exception exception);
@@ -634,8 +634,8 @@ public final class SQLCipherDatabase {
     }
 
     private static class OpenHelper extends net.sqlcipher.database.SQLiteOpenHelper {
-        private Context ctx_;
-        private String database_name_;
+        private final Context ctx_;
+        private final String database_name_;
         public OpenHelper(Context ctx, String database_name, DatabaseMetadata.Database metadata) {
             super(ctx, database_name, null, DATABASE_VERSION, new DatabaseHook(metadata));
 

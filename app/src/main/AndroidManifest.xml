@@ -19,7 +19,7 @@
             android:name="com.google.android.backup.api_key"
             android:value="AEdPqrEAAAAI-a5sT7TrHYYSaEszP3PMwsKzzhqLMTbgttvbNw" />
         <provider
-            android:name="android.support.v4.content.FileProvider"
+            android:name="androidx.core.content.FileProvider"
             android:authorities="net.af0.sesame.keysexport"
             android:exported="false"
             android:grantUriPermissions="true">

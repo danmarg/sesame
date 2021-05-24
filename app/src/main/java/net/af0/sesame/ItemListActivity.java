@@ -8,11 +8,11 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.widget.CursorAdapter;
+import androidx.fragment.app.FragmentActivity;
+import androidx.loader.app.LoaderManager;
+import androidx.loader.content.CursorLoader;
+import androidx.loader.content.Loader;
+import androidx.cursoradapter.widget.CursorAdapter;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -443,7 +443,7 @@ public final class ItemListActivity extends FragmentActivity
     }
 
     static class BlobCursorAdapter extends CursorAdapter {
-        private LayoutInflater inflater_;
+        private final LayoutInflater inflater_;
 
         public BlobCursorAdapter(Context context, Cursor c, int flags) {
             super(context, c, flags);
@@ -453,16 +453,16 @@ public final class ItemListActivity extends FragmentActivity
         @Override
         public void bindView(View view, Context context, Cursor cursor) {
 
-            TextView text1 = (TextView) view.findViewById(R.id.text1);
+            TextView text1 = view.findViewById(R.id.text1);
             Common.ArrayToTextView(
                     Common.decode(cursor.getBlob(
-                            cursor.getColumnIndex(SQLCipherDatabase.Instance().COLUMN_DOMAIN))),
+                            cursor.getColumnIndex(SQLCipherDatabase.COLUMN_DOMAIN))),
                     text1
             );
-            TextView text2 = (TextView) view.findViewById(R.id.text2);
+            TextView text2 = view.findViewById(R.id.text2);
             Common.ArrayToTextView(
                     Common.decode(cursor.getBlob(
-                            cursor.getColumnIndex(SQLCipherDatabase.Instance().COLUMN_USERNAME))),
+                            cursor.getColumnIndex(SQLCipherDatabase.COLUMN_USERNAME))),
                     text2
             );
         }

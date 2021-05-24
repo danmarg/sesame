@@ -2,7 +2,7 @@ package net.af0.sesame;
 
 import android.app.ProgressDialog;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -75,10 +75,10 @@ public class ItemDetailFragment extends Fragment
                              Bundle savedInstanceState) {
         rootView_ = inflater.inflate(R.layout.fragment_item_detail, container, false);
 
-        usernameView_ = ((TextView) rootView_.findViewById(R.id.username));
-        passwordView_ = ((TextView) rootView_.findViewById(R.id.password));
-        domainView_ = ((TextView) rootView_.findViewById(R.id.domain));
-        remarksView_ = ((TextView) rootView_.findViewById(R.id.remarks));
+        usernameView_ = rootView_.findViewById(R.id.username);
+        passwordView_ = rootView_.findViewById(R.id.password);
+        domainView_ = rootView_.findViewById(R.id.domain);
+        remarksView_ = rootView_.findViewById(R.id.remarks);
 
         loadFromDatabase();
 

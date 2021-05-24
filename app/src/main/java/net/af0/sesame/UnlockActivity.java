@@ -45,7 +45,7 @@ public final class UnlockActivity extends Activity implements SQLCipherDatabase.
         }
 
         // Set up the login form.
-        passwordView_ = (EditText) findViewById(R.id.password);
+        passwordView_ = findViewById(R.id.password);
         passwordView_.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView textView, int id, KeyEvent keyEvent) {

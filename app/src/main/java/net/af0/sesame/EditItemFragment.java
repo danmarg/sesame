@@ -4,7 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import androidx.fragment.app.Fragment;
 import android.text.InputType;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -72,11 +72,11 @@ public class EditItemFragment extends Fragment
         addItemView_ = inflater.inflate(R.layout.fragment_edit_item, container, false);
         addItemFormView_ = addItemView_.findViewById(R.id.add_item_form);
 
-        usernameView_ = (EditText) addItemFormView_.findViewById(R.id.username);
-        domainView_ = (EditText) addItemFormView_.findViewById(R.id.domain);
-        passwordView_ = (EditText) addItemFormView_.findViewById(R.id.password);
-        remarksView_ = (EditText) addItemFormView_.findViewById(R.id.remarks);
-        passwordSwitch_ = ((Switch) addItemView_.findViewById(R.id.show_password));
+        usernameView_ = addItemFormView_.findViewById(R.id.username);
+        domainView_ = addItemFormView_.findViewById(R.id.domain);
+        passwordView_ = addItemFormView_.findViewById(R.id.password);
+        remarksView_ = addItemFormView_.findViewById(R.id.remarks);
+        passwordSwitch_ = addItemView_.findViewById(R.id.show_password);
 
         // Make the show/hide switch change the password field visibility.
         passwordSwitch_.setOnCheckedChangeListener(
@@ -93,7 +93,7 @@ public class EditItemFragment extends Fragment
                 }
         );
 
-        Button generateButton = (Button) addItemView_.findViewById(R.id.generate_password_button);
+        Button generateButton = addItemView_.findViewById(R.id.generate_password_button);
         generateButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -101,7 +101,7 @@ public class EditItemFragment extends Fragment
             }
         });
 
-        Button addButton = (Button) addItemView_.findViewById(R.id.add_button);
+        Button addButton = addItemView_.findViewById(R.id.add_button);
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
