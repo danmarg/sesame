@@ -3,6 +3,8 @@ plugins {
 }
 
 android {
+    namespace "net.af0.sesame"
+
     compileSdkVersion 30
     buildToolsVersion "30.0.3"
 
