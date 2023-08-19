@@ -75,12 +75,11 @@ public final class UnlockActivity extends Activity implements SQLCipherDatabase.
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
+        if (item.getItemId() == R.id.action_settings) {
                 startActivity(new Intent(this, SettingsActivity.class).setFlags(
                         Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_NEW_TASK));
                 return true;
-            case R.id.action_export:
+	} else if (item.getItemId() == R.id.action_export) {
                 return Common.ExportKeys(this);
         }
         return super.onOptionsItemSelected(item);

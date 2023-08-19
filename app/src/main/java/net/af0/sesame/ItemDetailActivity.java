@@ -65,14 +65,11 @@ public final class ItemDetailActivity extends FragmentActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_edit:
+        if (item.getItemId() ==  R.id.action_edit) {
                 onEditItem();
-                break;
-            case R.id.action_delete:
+	} else if (item.getItemId() == R.id.action_delete) {
                 onDeleteItem();
-                break;
-            case android.R.id.home:
+	} else if (item.getItemId() == android.R.id.home) {
                 NavUtils.navigateUpTo(this, new Intent(this, ItemListActivity.class));
                 return true;
         }
@@ -90,6 +87,7 @@ public final class ItemDetailActivity extends FragmentActivity {
                 }
                 break;
         }
+	super.onActivityResult(requestCode, resultCode, data);
     }
 
     // Called from the child ItemListFragment on the Edit context menu.

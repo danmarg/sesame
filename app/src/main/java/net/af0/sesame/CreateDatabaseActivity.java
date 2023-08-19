@@ -123,8 +123,7 @@ public final class CreateDatabaseActivity extends Activity
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_settings:
+        if (item.getItemId() == R.id.action_settings) {
                 // Launch the settings activity for this menu item.
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;

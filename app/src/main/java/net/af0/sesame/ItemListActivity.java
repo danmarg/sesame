@@ -132,6 +132,8 @@ public final class ItemListActivity extends FragmentActivity
 
         setContentView(R.layout.activity_item_list);
 
+	// XXX: Why isn't R.id.item_detail_container resolved? This breaks the two-pane view.
+	/*
         if (findViewById(R.id.item_detail_container) != null) {
             // The detail container view will be present only in the large-screen layouts
             // (res/values-large and res/values-sw600dp). If this view is present, then the activity
@@ -142,7 +144,7 @@ public final class ItemListActivity extends FragmentActivity
             ((ItemListFragment) getSupportFragmentManager()
                     .findFragmentById(R.id.item_list))
                     .setActivateOnItemClick();
-        }
+        }*/
 
         itemListFragment_ = (ItemListFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.item_list);
@@ -170,22 +172,21 @@ public final class ItemListActivity extends FragmentActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle presses on the action bar items
-        switch (item.getItemId()) {
-            case R.id.action_lock:
+	if (item.getItemId() == R.id.action_lock) {
                 startActivity(new Intent(this, UnlockActivity.class).setFlags(
                         Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_CLEAR_TASK |
                                 Intent.FLAG_ACTIVITY_NO_ANIMATION
                 ));
                 return true;
-            case R.id.action_export:
+	} else if (item.getItemId() == R.id.action_export) {
                 return Common.ExportKeys(this);
-            case R.id.action_import:
+	} else if (item.getItemId() ==  R.id.action_import) {
                 startDatabaseImport();
                 return true;
-            case R.id.action_settings:
+	} else if (item.getItemId() == R.id.action_settings) {
                 startActivity(new Intent(this, SettingsActivity.class));
                 return true;
-            case R.id.add:
+	} else if (item.getItemId() == R.id.add) {
                 if (twoPane_) {
                     // In two-pane mode, show the add key view in this activity by adding or
                     // replacing the detail fragment using a fragment transaction.
@@ -205,14 +206,13 @@ public final class ItemListActivity extends FragmentActivity
                     startActivityForResult(addIntent, ADD_RECORD_REQUEST);
                 }
                 return true;
-            case R.id.action_edit:
+	} else if (item.getItemId() == R.id.action_edit) {
                 onEditItem(itemListAdapter_.getCursor().getPosition());
                 return true;
-            case R.id.action_delete:
+	} else if (item.getItemId() == R.id.action_delete) {
                 onDeleteItem(itemListAdapter_.getCursor().getPosition());
-            default:
-                return super.onOptionsItemSelected(item);
-        }
+	}
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -238,6 +238,7 @@ public final class ItemListActivity extends FragmentActivity
                 }
                 break;
         }
+	super.onActivityResult(requestCode, resultCode, data);
     }
 
     /**
@@ -456,13 +457,13 @@ public final class ItemListActivity extends FragmentActivity
             TextView text1 = view.findViewById(R.id.text1);
             Common.ArrayToTextView(
                     Common.decode(cursor.getBlob(
-                            cursor.getColumnIndex(SQLCipherDatabase.COLUMN_DOMAIN))),
+                            cursor.getColumnIndexOrThrow(SQLCipherDatabase.COLUMN_DOMAIN))),
                     text1
             );
             TextView text2 = view.findViewById(R.id.text2);
             Common.ArrayToTextView(
                     Common.decode(cursor.getBlob(
-                            cursor.getColumnIndex(SQLCipherDatabase.COLUMN_USERNAME))),
+                            cursor.getColumnIndexOrThrow(SQLCipherDatabase.COLUMN_USERNAME))),
                     text2
             );
         }

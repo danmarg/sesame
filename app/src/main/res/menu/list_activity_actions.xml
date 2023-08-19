@@ -1,36 +1,37 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto">
     <!-- Lock, should appear as action button -->
     <item
         android:id="@+id/action_lock"
         android:icon="@drawable/ic_action_not_secure"
-        android:showAsAction="always"
+        app:showAsAction="always"
         android:title="@string/action_lock" />
     <!-- Search, should appear as action button -->
     <item
         android:id="@+id/search"
-        android:actionViewClass="android.widget.SearchView"
+        app:actionViewClass="android.widget.SearchView"
         android:icon="@drawable/ic_action_search"
-        android:showAsAction="collapseActionView|ifRoom"
+        app:showAsAction="collapseActionView|ifRoom"
         android:title="@string/search_title" />
     <!-- Add button, can overflow -->
     <item
         android:id="@+id/add"
         android:icon="@drawable/ic_action_new"
-        android:showAsAction="collapseActionView|ifRoom"
+        app:showAsAction="collapseActionView|ifRoom"
         android:title="@string/add_title" />
     <!-- Settings, should always be in the overflow -->
     <item
         android:id="@+id/action_settings"
-        android:showAsAction="never"
+        app:showAsAction="never"
         android:title="@string/action_settings" />
     <!-- Export button, should always be in the overflow -->
     <item
         android:id="@+id/action_export"
-        android:showAsAction="never"
+        app:showAsAction="never"
         android:title="@string/action_export" />
     <!-- Import button, should always be in the overflow -->
     <item
         android:id="@+id/action_import"
-        android:showAsAction="never"
+        app:showAsAction="never"
         android:title="@string/action_import" />
 </menu>

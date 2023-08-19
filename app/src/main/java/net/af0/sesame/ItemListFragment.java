@@ -92,14 +92,13 @@ public final class ItemListFragment extends ListFragment {
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-        switch (item.getItemId()) {
-            case R.id.action_edit:
+	if (item.getItemId() == R.id.action_edit) {
                 ((ItemListActivity) getActivity()).onEditItem(info.position);
                 return true;
-            case R.id.action_delete:
+	} else if (item.getItemId() == R.id.action_delete) {
                 ((ItemListActivity) getActivity()).onDeleteItem(info.position);
                 return true;
-            default:
+	} else {
                 return super.onContextItemSelected(item);
         }
     }
