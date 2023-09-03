@@ -1,24 +1,32 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto">
+<menu xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <!-- Lock, should appear as action button -->
     <item
         android:id="@+id/action_lock"
         android:icon="@drawable/ic_action_not_secure"
-        app:showAsAction="always"
-        android:title="@string/action_lock" />
+        app:showAsAction="collapseActionView|ifRoom"
+        android:showAsAction="collapseActionView|ifRoom"
+        android:title="@string/action_lock"
+        tools:ignore="AppCompatResource" />
     <!-- Search, should appear as action button -->
     <item
         android:id="@+id/search"
-        app:actionViewClass="android.widget.SearchView"
         android:icon="@drawable/ic_action_search"
+        android:title="@string/search_title"
+        app:actionViewClass="android.widget.SearchView"
         app:showAsAction="collapseActionView|ifRoom"
-        android:title="@string/search_title" />
+        android:showAsAction="collapseActionView|ifRoom"
+        tools:ignore="AppCompatResource"
+        />
     <!-- Add button, can overflow -->
     <item
         android:id="@+id/add"
         android:icon="@drawable/ic_action_new"
         app:showAsAction="collapseActionView|ifRoom"
-        android:title="@string/add_title" />
+        android:showAsAction="collapseActionView|ifRoom"
+        android:title="@string/add_title"
+        tools:ignore="AppCompatResource" />
     <!-- Settings, should always be in the overflow -->
     <item
         android:id="@+id/action_settings"
