@@ -20,7 +20,7 @@ android {
            release {
                // We can leave these in environment variables
                storeFile file(System.getenv("KEYSTORE"))
-               keyAlias "af0.net signing key" //System.getenv("KEY_ALIAS")
+               keyAlias System.getenv("KEY_ALIAS")
    
                storePassword System.getenv("KEYSTORE_PASSWD")
                keyPassword System.getenv("KEYSTORE_PASSWD")
@@ -49,11 +49,19 @@ apply plugin: 'com.google.protobuf'
 
 protobuf {
     protoc {
-        artifact = 'com.google.protobuf:protoc:3.0.0'
+        if (osdetector.os == "osx") {
+            artifact = 'com.google.protobuf:protoc:3.14.0:osx-x86_64'
+        } else {
+            artifact = 'com.google.protobuf:protoc:3.14.0'
+        }
     }
     plugins {
         javalite {
-            artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+            if (osdetector.os == "osx") {
+                artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0:osx-x86_64'
+            } else {
+                artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
+            }
         }
     }
     generateProtoTasks {
