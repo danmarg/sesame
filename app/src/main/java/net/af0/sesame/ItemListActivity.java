@@ -100,7 +100,9 @@ public final class ItemListActivity extends FragmentActivity
         // Set up search widget
         SearchView searchView =
                 (SearchView) menu.findItem(R.id.search).getActionView();
-        searchView.setOnQueryTextListener(this);
+        if (searchView != null) {
+            searchView.setOnQueryTextListener(this);
+        }
 
         if (twoPane_) {
             menu.add(0, R.id.action_edit, Menu.NONE, R.string.edit);
