@@ -1,11 +1,15 @@
 plugins {
     id 'com.android.application'
+    id 'com.google.protobuf' version '0.9.5'
+}
+ext {
+    protobufVersion = '3.25.3'
 }
 android {
     namespace "net.af0.sesame"
 
     compileSdkVersion 33
-    buildToolsVersion "34.0.0"
+    buildToolsVersion "36.0.0"
 
     defaultConfig {
         applicationId "net.af0.sesame"
@@ -44,33 +48,18 @@ android {
 }
    
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.protobuf'
 
 
 protobuf {
     protoc {
-        if (osdetector.os == "osx") {
-            artifact = 'com.google.protobuf:protoc:3.14.0:osx-x86_64'
-        } else {
-            artifact = 'com.google.protobuf:protoc:3.14.0'
-        }
+        artifact = "com.google.protobuf:protoc:${protobufVersion}"
     }
     plugins {
-        javalite {
-            if (osdetector.os == "osx") {
-                artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0:osx-x86_64'
-            } else {
-                artifact = 'com.google.protobuf:protoc-gen-javalite:3.0.0'
-            }
-        }
     }
     generateProtoTasks {
         all().each { task ->
             task.builtins {
-                remove java
-            }
-            task.plugins {
-                javalite {}
+                java { option 'lite' }
             }
         }
     }
@@ -91,10 +80,11 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'androidx.navigation:navigation-fragment:2.3.5'
     implementation 'androidx.navigation:navigation-ui:2.3.5'
-    implementation 'com.google.protobuf:protobuf-lite:3.0.1'
     implementation "androidx.sqlite:sqlite:2.2.0"
+    implementation "com.google.protobuf:protobuf-javalite:${protobufVersion}"
     implementation group: 'net.zetetic', name: 'android-database-sqlcipher', version: '4.5.4'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
 }
