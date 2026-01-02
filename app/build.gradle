@@ -8,8 +8,7 @@ ext {
 android {
     namespace "net.af0.sesame"
 
-    compileSdkVersion 33
-    buildToolsVersion "36.0.0"
+    compileSdkVersion 34
 
     defaultConfig {
         applicationId "net.af0.sesame"
@@ -20,21 +19,23 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-    signingConfigs {
-           release {
-               // We can leave these in environment variables
-               storeFile file(System.getenv("KEYSTORE"))
-               keyAlias System.getenv("KEY_ALIAS")
-   
-               storePassword System.getenv("KEYSTORE_PASSWD")
-               keyPassword System.getenv("KEYSTORE_PASSWD")
-           }
-   }
+    if (System.getenv("KEYSTORE") != null) {
+        signingConfigs {
+            release {
+                storeFile file(System.getenv("KEYSTORE"))
+                keyAlias System.getenv("KEY_ALIAS")
+                storePassword System.getenv("KEYSTORE_PASSWD")
+                keyPassword System.getenv("KEYSTORE_PASSWD")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
+            if (System.getenv("KEYSTORE") != null) {
+                signingConfig signingConfigs.release
+            }
         }
     }
     compileOptions {
@@ -75,16 +76,16 @@ processResources {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.3.0'
-    implementation 'com.google.android.material:material:1.3.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
-    implementation 'androidx.navigation:navigation-fragment:2.3.5'
-    implementation 'androidx.navigation:navigation-ui:2.3.5'
-    implementation "androidx.sqlite:sqlite:2.2.0"
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.navigation:navigation-fragment:2.7.7'
+    implementation 'androidx.navigation:navigation-ui:2.7.7'
+    implementation "androidx.sqlite:sqlite:2.4.0"
     implementation "com.google.protobuf:protobuf-javalite:${protobufVersion}"
     implementation group: 'net.zetetic', name: 'android-database-sqlcipher', version: '4.5.4'
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
 
 }
