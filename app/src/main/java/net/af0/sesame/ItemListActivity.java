@@ -26,7 +26,7 @@ import android.widget.FilterQueryProvider;
 import android.widget.SearchView;
 import android.widget.TextView;
 
-import net.sqlcipher.CursorWrapper;
+import android.database.CursorWrapper;
 
 import java.io.IOException;
 import java.io.InputStream;

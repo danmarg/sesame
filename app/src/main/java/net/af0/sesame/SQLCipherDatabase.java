@@ -3,19 +3,18 @@ package net.af0.sesame;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import net.sqlcipher.Cursor;
-import net.sqlcipher.database.SQLiteDatabase;
-import net.sqlcipher.database.SQLiteDatabaseHook;
-
+import net.zetetic.database.sqlcipher.SQLiteDatabase;
+import net.zetetic.database.sqlcipher.SQLiteDatabaseHook;
+import net.zetetic.database.sqlcipher.SQLiteOpenHelper;
+import net.zetetic.database.sqlcipher.SQLiteConnection;
+import android.database.Cursor;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -24,7 +23,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
 /**
  * Class wrapping the database interactions. To be used as a singleton.
  */
@@ -52,21 +50,17 @@ public final class SQLCipherDatabase {
     private static final int STRING_DATABASE_VERSION = 3;
     private static final int DATABASE_VERSION = 4;
     private static final String DATABASE_NAME = "keys.db";
-
-
     private static final SQLCipherDatabase INSTANCE_ = new SQLCipherDatabase(DATABASE_NAME);
     public static SQLCipherDatabase Instance() {
       return INSTANCE_;
     }
     // Instance members:
     private final String database_name_;
-    private net.sqlcipher.database.SQLiteOpenHelper helper_;
+    private net.zetetic.database.sqlcipher.SQLiteOpenHelper helper_;
     private SQLiteDatabase database_;
-
     protected SQLCipherDatabase(String database_name) {
         database_name_ = database_name;
     }
-
     private static Record createRecord(SQLiteDatabase database,
                                        final char[] username, final char[] domain,
                                        final char[] password, final char[] remarks) {
@@ -83,14 +77,12 @@ public final class SQLCipherDatabase {
         crs.close();
         return r;
     }
-
     public void createRecord(final char[] username, final char[] domain,
                                     final char[] password, final char[] remarks,
                                     final Callbacks2<Boolean, Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Record r;
             Exception exception;
-
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
@@ -101,7 +93,6 @@ public final class SQLCipherDatabase {
                     return false;
                 }
             }
-
             @Override
             protected void onPostExecute(final Boolean success) {
                 if (callbacks != null) {
@@ -112,7 +103,6 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -121,12 +111,10 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     public void deleteRecord(final long record_id,
                                     final Callbacks2<Boolean, Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Exception exception;
-
             @Override
             protected Boolean doInBackground(Void... params) {
                 try {
@@ -136,7 +124,6 @@ public final class SQLCipherDatabase {
                 }
                 return true;
             }
-
             @Override
             protected void onPostExecute(final Boolean result) {
                 if (callbacks != null) {
@@ -147,7 +134,6 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -156,11 +142,9 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     public void updateRecord(final Record r, final Callbacks2<Boolean, Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Exception exception;
-
             @Override
             protected Boolean doInBackground(Void... params) {
                 ContentValues values = new ContentValues();
@@ -175,7 +159,6 @@ public final class SQLCipherDatabase {
                 }
                 return true;
             }
-
             @Override
             protected void onPostExecute(final Boolean result) {
                 if (callbacks != null) {
@@ -186,7 +169,6 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -195,12 +177,10 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     public void getRecord(final long record_id, final Callbacks<Record> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Record r;
             Exception exception;
-
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
@@ -219,12 +199,10 @@ public final class SQLCipherDatabase {
                 }
                 return r != null;
             }
-
             @Override
             protected void onPostExecute(final Boolean success) {
                 callbacks.OnFinish(r);
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -237,23 +215,18 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     public Cursor getAllCursor() {
         return database_.query(TABLE_KEYS, allColumns_, null, null, null, null,
                 "LOWER(" + COLUMN_DOMAIN + "), LOWER(" + COLUMN_USERNAME + ")");
     }
-
     public Cursor getContaining(String substr) {
         // TODO: Ensure this works on non-ASCII searches. It seems to in some cases (real phone) and
         // not others (emulator), so there may be an issue with mismatching locales?
-        String s = DatabaseUtils.sqlEscapeString("%" + substr + "%");
         return database_.query(TABLE_KEYS, allColumns_,
-                String.format("%s LIKE %s OR %s LIKE %s", COLUMN_DOMAIN, s, COLUMN_USERNAME, s),
-                null, null, null,
+                COLUMN_DOMAIN + " LIKE ? OR " + COLUMN_USERNAME + " LIKE ?",
+                new String[]{"%" + substr + "%", "%" + substr + "%"}, null, null,
                 "LOWER(" + COLUMN_DOMAIN + "), LOWER(" + COLUMN_USERNAME + ")");
     }
-
-
     public static Record toRecord(Cursor crs) {
         Record r = new Record();
         r.setId(crs.getLong(0));
@@ -261,13 +234,10 @@ public final class SQLCipherDatabase {
         r.setDomain(Common.decode(crs.getBlob(2)));
         r.setPassword(Common.decode(crs.getBlob(3)));
         r.setRemarks(Common.decode(crs.getBlob(4)));
-
         return r;
     }
-
     private static DatabaseMetadata.Database getMetadataFromPrefs(Context ctx) throws InvalidProtocolBufferException {
         DatabaseMetadata.Database metadata;
-
         SharedPreferences prefs = ctx.getSharedPreferences(Constants.DB_METADATA_PREF,
                 Context.MODE_PRIVATE);
         metadata =
@@ -279,30 +249,27 @@ public final class SQLCipherDatabase {
                 ).build();
         return metadata;
     }
-
     public synchronized void openDatabase(final Context ctx, final char[] password,
                                           final Callbacks<Boolean> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Exception exception;
-
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
                     if (helper_ == null) {
-                        SQLiteDatabase.loadLibs(ctx);
+                        System.loadLibrary("sqlcipher");
                         DatabaseMetadata.Database metadata = getMetadataFromPrefs(ctx);
-
                         if (metadata.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION_3)) {
                             SQLCipherDatabase.OpenHelper legacyHelper = new OpenHelper(ctx,
-                                    database_name_, metadata);
-                            SQLiteDatabase legacyDb = legacyHelper.getWritableDatabase(password);
+                                    database_name_, password, new DatabaseHook(metadata));
+                            SQLiteDatabase legacyDb = legacyHelper.getWritableDatabase();
                             // Export to a new database.
                             File newDbName = ctx.getDatabasePath("newDB.db");
                             DatabaseMetadata.Database newMetadata = DatabaseMetadata.Database.newBuilder(metadata)
                                     .setSqlcipherVersion(Constants.SQLCIPHER_VERSION).build();
                             SQLCipherDatabase.OpenHelper newDbHelper = new OpenHelper(ctx,
-                                    newDbName.getName(), newMetadata);
-                            SQLiteDatabase newDb = newDbHelper.getWritableDatabase(password);
+                                    newDbName.getName(), password, new DatabaseHook(newMetadata));
+                            SQLiteDatabase newDb = newDbHelper.getWritableDatabase();
                             Cursor crs = legacyDb.query(TABLE_KEYS, allColumns_, null, null, null, null,
                                     null);
                             for (crs.moveToFirst(); !crs.isAfterLast(); crs.moveToNext()) {
@@ -312,7 +279,6 @@ public final class SQLCipherDatabase {
                             }
                             crs.close();
                             newDb.close();
-
                             // Move the file over.
                             if (!newDbName.renameTo(ctx.getDatabasePath(database_name_))) {
                                 throw new IOException("Renaming database failed!");
@@ -327,16 +293,15 @@ public final class SQLCipherDatabase {
                         } else if (!metadata.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION)) {
                             throw new UnsupportedOperationException("Unknown SQLCipher version " + metadata.getSqlcipherVersion());
                         }
-                        helper_ = new OpenHelper(ctx, database_name_, metadata);
+                        helper_ = new OpenHelper(ctx, database_name_, password, new DatabaseHook(metadata));
                     }
-                    database_ = helper_.getWritableDatabase(password);
+                    database_ = helper_.getWritableDatabase();
                 } catch (Exception e) {
                     exception = e;
                     return false;
                 }
                 return true;
             }
-
             @Override
             protected void onPostExecute(final Boolean success) {
                 if (callbacks != null) {
@@ -347,7 +312,6 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -356,7 +320,6 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     // The import/export format for the database is
     //   # bytes: DatabaseMetadata, serialized with writeDelimitedTo() (i.e. preceded by a size
     //            varint). Parse with parseDelimitedFrom().
@@ -366,7 +329,6 @@ public final class SQLCipherDatabase {
                                final char[] password, final Callbacks<Boolean> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Exception exception;
-
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
@@ -391,8 +353,8 @@ public final class SQLCipherDatabase {
                         tmpDbStr.close();
                     }
                     // Now everything is hunky dory.
-                    SQLiteDatabase imported = SQLiteDatabase.openDatabase(tmpDb.getPath(), password,
-                            null, SQLiteDatabase.OPEN_READONLY, new DatabaseHook(metadata));
+                    SQLiteDatabase imported = SQLiteDatabase.openDatabase(tmpDb.getPath(), new String(password).getBytes(),
+                            null, SQLiteDatabase.OPEN_READONLY, null, new DatabaseHook(metadata));
                     if (imported.getVersion() != DATABASE_VERSION &&
                         imported.getVersion() != STRING_DATABASE_VERSION) {
                         // Because we're not using OpenHelper here, we have to handle version
@@ -422,7 +384,6 @@ public final class SQLCipherDatabase {
                     return false;
                 }
             }
-
             @Override
             protected void onPostExecute(final Boolean success) {
                 if (callbacks != null) {
@@ -433,7 +394,6 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -442,12 +402,10 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     public void exportDatabase(final Context ctx, final OutputStream output,
                                final Callbacks<Boolean> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Exception exception;
-
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
@@ -467,7 +425,6 @@ public final class SQLCipherDatabase {
                 }
                 return true;
             }
-
             @Override
             protected void onPostExecute(final Boolean success) {
                 if (callbacks != null) {
@@ -478,7 +435,6 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -487,7 +443,6 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     public void createDatabase(Context ctx, char[] password, Callbacks<Boolean> callbacks) {
         if (exists(ctx)) {
             callbacks.OnException(new SQLiteException("file already exists"));
@@ -506,12 +461,10 @@ public final class SQLCipherDatabase {
         // Open normally.
         openDatabase(ctx, password, callbacks);
     }
-
     public synchronized void deleteDatabase(final Context ctx,
                                             final Callbacks<Boolean> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Exception exception;
-
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
@@ -523,7 +476,6 @@ public final class SQLCipherDatabase {
                 }
                 return true;
             }
-
             @Override
             protected void onPostExecute(final Boolean success) {
                 if (callbacks != null) {
@@ -534,7 +486,6 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -543,24 +494,20 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     public void changePassword(final String password, final Callbacks<Boolean> callbacks) {
         new AsyncTask<Void, Void, Boolean>() {
             Exception exception;
-
             @Override
             public Boolean doInBackground(Void... param) {
                 try {
                     // TODO: Switch this from a String to a char[] and just manually escape.
-                    database_.rawExecSQL("PRAGMA rekey = " + DatabaseUtils.sqlEscapeString(password)
-                            + ";");
+                    database_.rawExecSQL("PRAGMA rekey = ?;", new Object[]{password});
                 } catch (Exception e) {
                     exception = e;
                     return false;
                 }
                 return true;
             }
-
             @Override
             protected void onPostExecute(final Boolean success) {
                 if (callbacks != null) {
@@ -571,7 +518,6 @@ public final class SQLCipherDatabase {
                     }
                 }
             }
-
             @Override
             protected void onCancelled() {
                 if (callbacks != null) {
@@ -580,11 +526,9 @@ public final class SQLCipherDatabase {
             }
         }.execute();
     }
-
     public synchronized boolean isLocked() {
         return database_ == null || !database_.isOpen();
     }
-
     public void Lock() {
         if (helper_ != null) {
             helper_.close();
@@ -593,15 +537,12 @@ public final class SQLCipherDatabase {
             database_.close();
         }
     }
-
     public boolean exists(Context ctx) {
         return ctx.getDatabasePath(database_name_).exists();
     }
-
     public File getDatabaseFilePath(Context ctx) {
         return ctx.getDatabasePath(database_name_);
     }
-
     // Begin a transaction on the open database. Useful for preventing writes during, say, a file
     // backup.
     public synchronized void beginTransaction() {
@@ -609,44 +550,32 @@ public final class SQLCipherDatabase {
             database_.beginTransaction();
         }
     }
-
     public synchronized void endTransaction() {
         if (!isLocked()) {
             database_.endTransaction();
         }
     }
-
-
     interface Callbacks<T> {
         void OnFinish(T x);
-
         void OnException(Exception exception);
-
         void OnCancelled();
     }
-
     interface Callbacks2<T1, T2> {
         void OnFinish(T1 x, T2 y);
-
         void OnException(Exception exception);
-
         void OnCancelled();
     }
-
-    private static class OpenHelper extends net.sqlcipher.database.SQLiteOpenHelper {
+    private static class OpenHelper extends net.zetetic.database.sqlcipher.SQLiteOpenHelper {
         private final Context ctx_;
         private final String database_name_;
-        public OpenHelper(Context ctx, String database_name, DatabaseMetadata.Database metadata) {
-            super(ctx, database_name, null, DATABASE_VERSION, new DatabaseHook(metadata));
-
+        public OpenHelper(Context ctx, String database_name, char[] password, SQLiteDatabaseHook hook) {
+            super(ctx, database_name, new String(password).getBytes(), null, DATABASE_VERSION, 0, null, hook, true);
             ctx_ = ctx;
             database_name_ = database_name;
         }
-
         public void onCreate(SQLiteDatabase database) {
             database.execSQL(DATABASE_CREATE);
         }
-
         public void onUpgrade(SQLiteDatabase database, int oldVersion, int newVersion) {
             if (oldVersion != STRING_DATABASE_VERSION || newVersion != DATABASE_VERSION) {
                 throw new UnsupportedOperationException(
@@ -670,29 +599,24 @@ public final class SQLCipherDatabase {
             }
         }
     }
-
     private static class DatabaseHook implements SQLiteDatabaseHook {
         final DatabaseMetadata.Database metadata_;
-
         public DatabaseHook(DatabaseMetadata.Database metadata) {
             metadata_ = metadata;
         }
-
         @Override
-        public void preKey(SQLiteDatabase database) {
+        public void preKey(SQLiteConnection connection) {
         }
-
         @Override
-        public void postKey(SQLiteDatabase database) {
-            database.rawExecSQL(String.format("PRAGMA kdf_iter = %d", metadata_.getKdfIter()));
+        public void postKey(SQLiteConnection connection) {
+            connection.execute(String.format("PRAGMA kdf_iter = %d", metadata_.getKdfIter()), null, null);
             if (metadata_.getSqlcipherVersion().equals(Constants.SQLCIPHER_VERSION_3)) {
-                database.rawExecSQL(String.format("PRAGMA cipher_page_size = 1024"));
-                database.rawExecSQL(String.format("PRAGMA cipher_hmac_algorithm = HMAC_SHA1"));
-                database.rawExecSQL(String.format("PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA1"));
+                connection.execute("PRAGMA cipher_page_size = 1024", null, null);
+                connection.execute("PRAGMA cipher_hmac_algorithm = HMAC_SHA1", null, null);
+                connection.execute("PRAGMA cipher_kdf_algorithm = PBKDF2_HMAC_SHA1", null, null);
             }
         }
     }
-
     // Database model.
     public static class Record {
         private long id_;
@@ -700,50 +624,39 @@ public final class SQLCipherDatabase {
         private char[] domain_;
         private char[] password_;
         private char[] remarks_;
-
         public void forget() {
             Common.ZeroChars(username_);
             Common.ZeroChars(password_);
             Common.ZeroChars(domain_);
             Common.ZeroChars(remarks_);
         }
-
         public long getId() {
             return id_;
         }
-
         void setId(long id) {
             id_ = id;
         }
-
         public char[] getUsername() {
             return username_;
         }
-
         public void setUsername(char[] username) {
             username_ = username;
         }
-
         public char[] getDomain() {
             return domain_;
         }
-
         public void setDomain(char[] domain) {
             domain_ = domain;
         }
-
         public char[] getPassword() {
             return password_;
         }
-
         public void setPassword(char[] password) {
             password_ = password;
         }
-
         public char[] getRemarks() {
             return remarks_;
         }
-
         public void setRemarks(char[] remarks) {
             remarks_ = remarks;
         }

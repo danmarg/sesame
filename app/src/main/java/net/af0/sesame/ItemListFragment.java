@@ -11,7 +11,7 @@ import android.view.View;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ListView;
 
-import net.sqlcipher.Cursor;
+import android.database.Cursor;
 
 /**
  * A list fragment representing a list of Items. This fragment also supports tablet devices by
