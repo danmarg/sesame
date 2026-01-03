@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools">
 
     <supports-screens
         android:anyDensity="true"
@@ -10,6 +11,7 @@
 
     <application
         android:allowBackup="true"
+        tools:targetApi="35"
         android:backupAgent=".DatabaseBackupAgent"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
