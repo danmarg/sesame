@@ -8,16 +8,32 @@ ext {
 android {
     namespace "net.af0.sesame"
 
-    compileSdkVersion 35
+    compileSdk 35
+    buildToolsVersion "35.0.0"
 
     defaultConfig {
         applicationId "net.af0.sesame"
         minSdkVersion 21
-        targetSdkVersion 35
-        versionCode 26
+	targetSdk 35
+        versionCode 28
         versionName "1.9"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+	externalNativeBuild {
+            cmake {
+                // Tells the linker to align segments to 16KB
+                arguments "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+            }
+        }
+    }
+
+    // This tells the installer not to compress native libs, 
+    // which is required for 16KB alignment to work correctly
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = false
+        }
     }
     if (System.getenv("KEYSTORE") != null) {
         signingConfigs {
