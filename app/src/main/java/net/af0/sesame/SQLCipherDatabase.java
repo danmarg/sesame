@@ -3,6 +3,7 @@ package net.af0.sesame;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteException;
 import android.os.AsyncTask;
 import android.util.Base64;
@@ -296,8 +297,8 @@ public final class SQLCipherDatabase {
                         helper_ = new OpenHelper(ctx, database_name_, password, new DatabaseHook(metadata));
                     }
                     database_ = helper_.getWritableDatabase();
-                } catch (Exception e) {
-                    exception = e;
+                } catch (Throwable e) {
+                    exception = new Exception(e);
                     return false;
                 }
                 return true;
@@ -501,7 +502,7 @@ public final class SQLCipherDatabase {
             public Boolean doInBackground(Void... param) {
                 try {
                     // TODO: Switch this from a String to a char[] and just manually escape.
-                    database_.rawExecSQL("PRAGMA rekey = ?;", new Object[]{password});
+                    database_.rawExecSQL("PRAGMA rekey = " + DatabaseUtils.sqlEscapeString(password) + ";");
                 } catch (Exception e) {
                     exception = e;
                     return false;
@@ -569,7 +570,7 @@ public final class SQLCipherDatabase {
         private final Context ctx_;
         private final String database_name_;
         public OpenHelper(Context ctx, String database_name, char[] password, SQLiteDatabaseHook hook) {
-            super(ctx, database_name, new String(password).getBytes(), null, DATABASE_VERSION, 0, null, hook, true);
+            super(ctx, database_name, new String(password).getBytes(), null, DATABASE_VERSION, 0, null, hook, false);
             ctx_ = ctx;
             database_name_ = database_name;
         }

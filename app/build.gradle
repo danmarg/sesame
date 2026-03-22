@@ -28,11 +28,11 @@ android {
         }
     }
 
-    // This tells the installer not to compress native libs, 
-    // which is required for 16KB alignment to work correctly
+    // Extract native libs to the filesystem so they work regardless of
+    // in-APK alignment (required until sqlcipher ships 16KB-aligned .so files).
     packagingOptions {
         jniLibs {
-            useLegacyPackaging = false
+            useLegacyPackaging = true
         }
     }
     if (System.getenv("KEYSTORE") != null) {
