@@ -533,9 +533,11 @@ public final class SQLCipherDatabase {
     public void Lock() {
         if (helper_ != null) {
             helper_.close();
+            helper_ = null;
         }
         if (database_ != null) {
             database_.close();
+            database_ = null;
         }
     }
     public boolean exists(Context ctx) {

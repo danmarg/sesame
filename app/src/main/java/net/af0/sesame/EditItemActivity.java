@@ -2,9 +2,12 @@ package net.af0.sesame;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.view.MenuItem;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.FragmentActivity;
 import androidx.core.app.NavUtils;
-import android.view.MenuItem;
 
 /**
  * An activity that allows one to edit an item.
@@ -18,6 +21,8 @@ public final class EditItemActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_item);
+
+        applyActionBarInset();
 
         // Show the Up button in the action bar.
         if (getActionBar() != null) {
@@ -37,6 +42,21 @@ public final class EditItemActivity extends FragmentActivity {
                     .add(R.id.add_item_container, fragment)
                     .commit();
         }
+    }
+
+    private void applyActionBarInset() {
+        View decorView = getWindow().getDecorView();
+        decorView.post(() -> {
+            int actionBarHeight = getActionBar() != null ? getActionBar().getHeight() : 0;
+            View content = decorView.findViewById(android.R.id.content);
+            if (content == null) return;
+            WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(decorView);
+            int statusBarTop = insets != null
+                    ? insets.getInsets(WindowInsetsCompat.Type.statusBars()).top : 0;
+            int navBottom = insets != null
+                    ? insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom : 0;
+            content.setPadding(0, statusBarTop + actionBarHeight, 0, navBottom);
+        });
     }
 
     @Override

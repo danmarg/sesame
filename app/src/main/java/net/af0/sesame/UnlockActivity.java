@@ -12,6 +12,8 @@ import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.TextView;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 /**
  * This is the first activity the user sees when opening the app. It allows unlocking the database
@@ -173,6 +175,27 @@ public final class UnlockActivity extends Activity implements SQLCipherDatabase.
 
     public void OnCancelled() {
         dismissProgress();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            applyActionBarInset();
+        }
+    }
+
+    private void applyActionBarInset() {
+        View decorView = getWindow().getDecorView();
+        int actionBarHeight = getActionBar() != null ? getActionBar().getHeight() : 0;
+        View content = decorView.findViewById(android.R.id.content);
+        if (content == null) return;
+        WindowInsetsCompat insets = ViewCompat.getRootWindowInsets(decorView);
+        int statusBarTop = insets != null
+                ? insets.getInsets(WindowInsetsCompat.Type.statusBars()).top : 0;
+        int navBottom = insets != null
+                ? insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom : 0;
+        content.setPadding(0, statusBarTop + actionBarHeight, 0, navBottom);
     }
 
     private void dismissProgress() {
