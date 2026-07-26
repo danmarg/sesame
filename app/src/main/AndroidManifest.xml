@@ -11,7 +11,7 @@
 
     <application
         android:allowBackup="true"
-        tools:targetApi="35"
+        tools:targetApi="36"
         android:backupAgent=".DatabaseBackupAgent"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"

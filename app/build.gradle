@@ -8,15 +8,15 @@ ext {
 android {
     namespace "net.af0.sesame"
 
-    compileSdk 35
-    buildToolsVersion "35.0.0"
+    compileSdk 36
+    buildToolsVersion "36.0.0"
 
     defaultConfig {
         applicationId "net.af0.sesame"
         minSdkVersion 21
-	targetSdk 35
-        versionCode 28
-        versionName "1.9"
+	targetSdk 36
+        versionCode 30
+        versionName "1.10"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
